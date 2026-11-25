@@ -50,9 +50,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup-build
-      - name: Unit tests
+      - name: Unit tests, plus the API contract suite against each artifact
+        # The contract module is flavored, so its tasks are named per artifact; testDebugUnitTest alone would skip it.
         # Roborazzi screenshot verification joins this job with the first screenshot tests.
-        run: ./gradlew --continue testDebugUnitTest
+        run: >-
+          ./gradlew --continue
+          testDebugUnitTest
+          :tracklens-contract-tests:testCoreDebugUnitTest
+          :tracklens-contract-tests:testNoopDebugUnitTest
       - name: Upload reports
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

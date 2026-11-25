@@ -130,7 +130,7 @@ Findings:
 | Job | Gradle command | Uploads on failure |
 |---|---|---|
 | Static analysis | `spotlessCheck detekt checkDependencyPolicy :build-logic:convention:validatePlugins lint` | detekt, lint, dependency-policy reports |
-| Unit tests | `testDebugUnitTest` | test reports |
+| Unit tests | `testDebugUnitTest :tracklens-contract-tests:testCoreDebugUnitTest :tracklens-contract-tests:testNoopDebugUnitTest` | test reports |
 | API and release safety | `apiCheck checkNoopApiParity dependencyGuard verifyReleaseManifest verifyReleaseAarFloors` | generated ABI dumps, release-safety reports |
 | Build | `assemble :benchmark:assembleAndroidTest` | — |
 | CI OK | Succeeds only if all four succeeded | — |
@@ -156,6 +156,22 @@ Findings:
 - **`wrap` parameter order:** `wrap(source = default, delegate)`, with the delegate last, so `TrackLens.wrap(source = "firebase") { name, params -> … }` compiles. The first order, delegate first, broke that documented usage; a probe compiling host-style code against both artifacts caught it.
 - **Probe for API changes:** to check host-facing usage, add a temporary file to `sample/src/main` and run `:sample:compileDebugKotlin :sample:compileReleaseKotlin`. Debug compiles against tracklens-core and release against tracklens-noop. Task 10's contract tests make this permanent.
 - **Task ordering finding:** dependency-guard 0.5.0 declares the repository directory as an output of every `dependencyGuard` task. Any task scanning the repository (Spotless, detekt, `checkDependencyPolicy`) therefore needs a declared order, or Gradle rejects the build. It first showed up when more tasks ran in one build. `tracklens.root` orders those scans after `dependencyGuard`.
+
+## API contract suite (Task 10)
+
+`tracklens-contract-tests` has two product flavors, `core` and `noop`, each depending on one artifact. The same tests in `src/test` therefore run twice: `:tracklens-contract-tests:testCoreDebugUnitTest` and `:tracklens-contract-tests:testNoopDebugUnitTest`. Both are in `check` and in the CI unit job. The flavored task names are why plain `testDebugUnitTest` doesn't run them.
+
+| Test class | Promise |
+|---|---|
+| `NeverThrowsContractTest` | No public call throws: edge-case names (empty, 10k chars, emoji, newlines), null and cyclic values, 5,000-entry maps, 20-level nested bundles, 8 threads × 1,000 calls, any call order. `clearAllData`/`exportSession` callbacks arrive exactly once. |
+| `WrapContractTest` | `wrap()` forwards the caller's *same* map instance, every call exactly once and in order, even while disabled. SDK exceptions propagate as the same instance. In the no-op, `wrap()` returns the delegate itself. |
+| `BundlesContractTest` | Map↔Bundle keeps values *and* types (Int stays Int, Long stays Long, …); nested maps, Firebase-style `items` lists, typed lists and arrays survive a round trip; unsupported values become text. |
+| `ConfigContractTest` | Builders clamp bad values instead of throwing; section blocks build on earlier ones; redaction defaults cover e-mail, phone and card numbers; built configs are immutable. |
+| `JavaInteropTest` (Java) | The API as a Java host uses it: static facade, overloads, builders, SAM lambdas, a delegate implementing only `logEvent` (default methods), `TrackLensBundleExtensions`. |
+
+- **Proven:** with a no-op `wrap()` that swallowed events, 7 of the 30 tests failed with clear messages (for example "expected `[checkout_started]` but was `[]`").
+- **Robolectric** runs the Android-dependent tests on the JVM at SDK 35 (`src/test/resources/robolectric.properties`); the newest level this Robolectric version is known to support. It downloads its Android runtime jar on first use (into `~/.m2`, outside the Gradle cache).
+- **Contract scope:** these tests describe the promises of the public API, so later tasks must keep them passing as the stubs are replaced. Implementation details belong in each module's own tests.
 
 ## Environment quirks (local machine)
 

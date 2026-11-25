@@ -27,7 +27,8 @@ public object TrackLensBundles {
     }
 
     /**
-     * Copies [bundle] into a new map, preserving key order. Nested bundles become nested maps, and bundle arrays
+     * Copies [bundle] into a new map (in the bundle's iteration order; `Bundle` itself has no defined key order). Nested
+     * bundles become nested maps, and bundle arrays
      * or lists become lists of maps.
      */
     @JvmStatic
