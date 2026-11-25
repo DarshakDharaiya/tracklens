@@ -5,3 +5,8 @@ plugins {
 android {
     namespace = "io.github.tracklens.core"
 }
+
+dependencies {
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+}

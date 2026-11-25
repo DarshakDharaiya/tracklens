@@ -12,10 +12,10 @@ import io.github.tracklens.TrackLensListener
 import java.util.concurrent.Executor
 
 /**
- * Implementation behind the [io.github.tracklens.TrackLens] facade.
+ * Implementation behind the [io.github.tracklens.TrackLens] facade, which wraps every call in [guard].
  *
- * Task 8 stub: it holds the installed/enabled state and accepts every call. The pipeline (Tasks 11-15), sessions
- * (Task 25), UI (Tasks 17-20) and export (Tasks 44-45) replace the no-op bodies.
+ * Logging calls pass the kill switch, then go to [eventSink] through [pipelineBreaker]. Sessions (Task 25), UI
+ * (Tasks 17-20) and export (Tasks 44-45) replace the remaining stub bodies.
  */
 @Suppress("UnusedParameter", "TooManyFunctions") // One function per facade call; parameters are used once implemented.
 internal object TrackLensImpl {
@@ -23,6 +23,12 @@ internal object TrackLensImpl {
     var isInstalled: Boolean = false
         private set
 
+    /** `false` until [install] accepts this process (supported API level, main process). */
+    @Volatile
+    var isActive: Boolean = false
+        private set
+
+    /** Kill switch: `TrackLens.isEnabled`. */
     @Volatile
     var isEnabled: Boolean = true
 
@@ -30,44 +36,62 @@ internal object TrackLensImpl {
     var config: TrackLensConfig = TrackLensConfig.DEFAULT
         private set
 
+    /** Where accepted logging calls go. Task 13 installs the pipeline here; tests install failing sinks. */
+    @Volatile
+    var eventSink: EventSink = EventSink.NONE
+
+    val pipelineBreaker = CircuitBreaker(Component.PIPELINE)
+
+    const val NON_DEBUGGABLE_MESSAGE: String =
+        "The TrackLens debug artifact is running in a non-debuggable build. It is meant for debug builds only: " +
+            "depend on io.github.tracklens:tracklens-noop with releaseImplementation for release builds."
+
     @Synchronized
     fun install(
         application: Application,
         config: TrackLensConfig,
     ) {
         if (isInstalled) return
+        isInstalled = true
         this.config = config
         isEnabled = config.enabled
-        isInstalled = true
+
+        if (!InstallGate.isDebuggable(application)) {
+            Diagnostics.report(Component.INSTALL, DiagnosticLevel.ERROR, NON_DEBUGGABLE_MESSAGE)
+        }
+        val decision = InstallGate.evaluate(application, config.mainProcessOnly)
+        isActive = decision == InstallDecision.ACTIVE
+        val level = if (isActive) DiagnosticLevel.INFO else DiagnosticLevel.WARNING
+        Diagnostics.report(Component.INSTALL, level, decision.explanation)
     }
 
     fun log(
         name: String,
         params: Map<String, Any?>,
         source: String?,
-    ) = Unit
+    ) = record { it.log(name, params, source) }
 
     fun log(
         name: String,
         params: Bundle,
         source: String?,
-    ) = Unit
+    ) = record { it.log(name, params, source) }
 
     fun setUserProperty(
         name: String,
         value: String?,
         source: String?,
-    ) = Unit
+    ) = record { it.setUserProperty(name, value, source) }
 
     fun setUserId(
         userId: String?,
         source: String?,
-    ) = Unit
+    ) = record { it.setUserId(userId, source) }
 
     fun setScreen(
         name: String,
         screenClass: String?,
-    ) = Unit
+    ) = record { it.setScreen(name, screenClass) }
 
     fun startSession(label: String?) = Unit
 
@@ -102,4 +126,23 @@ internal object TrackLensImpl {
         listener: TrackLensListener,
         executor: Executor?,
     ): Subscription = Subscription {}
+
+    /** Kill switch first (two volatile reads), then the pipeline breaker. */
+    private inline fun record(crossinline call: (EventSink) -> Unit) {
+        if (!isActive || !isEnabled) return
+        pipelineBreaker.run(Unit) { call(eventSink) }
+    }
+
+    /** Back to the state before [install]; for tests only, since the facade is a process-wide singleton. */
+    fun resetForTests() {
+        synchronized(this) {
+            isInstalled = false
+            isActive = false
+            isEnabled = true
+            config = TrackLensConfig.DEFAULT
+            eventSink = EventSink.NONE
+            pipelineBreaker.reset()
+        }
+        Diagnostics.clear()
+    }
 }

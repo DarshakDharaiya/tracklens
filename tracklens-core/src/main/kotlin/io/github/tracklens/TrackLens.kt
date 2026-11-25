@@ -4,7 +4,10 @@ import android.app.Application
 import android.content.Context
 import android.os.Bundle
 import io.github.tracklens.internal.ForwardingAnalyticsDelegate
+import io.github.tracklens.internal.OnceCompletionCallback
+import io.github.tracklens.internal.OnceExportCallback
 import io.github.tracklens.internal.TrackLensImpl
+import io.github.tracklens.internal.guard
 import java.util.concurrent.Executor
 
 /**
@@ -43,13 +46,13 @@ public object TrackLens {
         application: Application,
         config: TrackLensConfig = TrackLensConfig.DEFAULT,
     ) {
-        TrackLensImpl.install(application, config)
+        guard("install") { TrackLensImpl.install(application, config) }
     }
 
     /** `true` once [install] has run in this process. */
     @JvmStatic
     public val isInstalled: Boolean
-        get() = TrackLensImpl.isInstalled
+        get() = guard("isInstalled", false) { TrackLensImpl.isInstalled }
 
     /**
      * Kill switch. While `false`, logging calls return immediately and nothing is recorded.
@@ -57,9 +60,9 @@ public object TrackLens {
      */
     @JvmStatic
     public var isEnabled: Boolean
-        get() = TrackLensImpl.isEnabled
+        get() = guard("isEnabled", false) { TrackLensImpl.isEnabled }
         set(value) {
-            TrackLensImpl.isEnabled = value
+            guard("setEnabled") { TrackLensImpl.isEnabled = value }
         }
 
     // ---- Logging -----------------------------------------------------------------------------------------------
@@ -67,7 +70,7 @@ public object TrackLens {
     /** Records an event without parameters. */
     @JvmStatic
     public fun log(name: String) {
-        TrackLensImpl.log(name, emptyMap(), null)
+        guard("log") { TrackLensImpl.log(name, emptyMap(), null) }
     }
 
     /**
@@ -81,7 +84,7 @@ public object TrackLens {
         params: Map<String, Any?>,
         source: String? = null,
     ) {
-        TrackLensImpl.log(name, params, source)
+        guard("log") { TrackLensImpl.log(name, params, source) }
     }
 
     /** Records an event whose parameters are in a [Bundle], as Firebase takes them. [params] is copied. */
@@ -92,7 +95,7 @@ public object TrackLens {
         params: Bundle,
         source: String? = null,
     ) {
-        TrackLensImpl.log(name, params, source)
+        guard("log") { TrackLensImpl.log(name, params, source) }
     }
 
     /** Records a user property change; `null` clears the property. */
@@ -103,7 +106,7 @@ public object TrackLens {
         value: String?,
         source: String? = null,
     ) {
-        TrackLensImpl.setUserProperty(name, value, source)
+        guard("setUserProperty") { TrackLensImpl.setUserProperty(name, value, source) }
     }
 
     /** Records a user id change; `null` clears it. Stored according to [RedactionConfig.userId] (hashed by default). */
@@ -113,7 +116,7 @@ public object TrackLens {
         userId: String?,
         source: String? = null,
     ) {
-        TrackLensImpl.setUserId(userId, source)
+        guard("setUserId") { TrackLensImpl.setUserId(userId, source) }
     }
 
     /**
@@ -126,7 +129,7 @@ public object TrackLens {
         name: String,
         screenClass: String? = null,
     ) {
-        TrackLensImpl.setScreen(name, screenClass)
+        guard("setScreen") { TrackLensImpl.setScreen(name, screenClass) }
     }
 
     // ---- Wrapping ----------------------------------------------------------------------------------------------
@@ -144,7 +147,7 @@ public object TrackLens {
     public fun wrap(
         source: String = AnalyticsDelegate.DEFAULT_SOURCE,
         delegate: AnalyticsDelegate,
-    ): AnalyticsDelegate = ForwardingAnalyticsDelegate(delegate, source)
+    ): AnalyticsDelegate = guard("wrap", delegate) { ForwardingAnalyticsDelegate(delegate, source) } // Fallback still forwards.
 
     // ---- Sessions ----------------------------------------------------------------------------------------------
 
@@ -155,50 +158,50 @@ public object TrackLens {
     @JvmStatic
     @JvmOverloads
     public fun startSession(label: String? = null) {
-        TrackLensImpl.startSession(label)
+        guard("startSession") { TrackLensImpl.startSession(label) }
     }
 
     /** Ends the current session. A new one starts on the next foreground if [SessionConfig.autoStart] is set. */
     @JvmStatic
     public fun endSession() {
-        TrackLensImpl.endSession()
+        guard("endSession") { TrackLensImpl.endSession() }
     }
 
     /** Sets or clears the label of the current session. */
     @JvmStatic
     public fun setSessionLabel(label: String?) {
-        TrackLensImpl.setSessionLabel(label)
+        guard("setSessionLabel") { TrackLensImpl.setSessionLabel(label) }
     }
 
     /** Sets or clears tester notes on the current session. */
     @JvmStatic
     public fun setSessionNotes(notes: String?) {
-        TrackLensImpl.setSessionNotes(notes)
+        guard("setSessionNotes") { TrackLensImpl.setSessionNotes(notes) }
     }
 
     /** Id of the current session, or `null` if none is active. */
     @JvmStatic
     public val currentSessionId: String?
-        get() = TrackLensImpl.currentSessionId
+        get() = guard("currentSessionId", null) { TrackLensImpl.currentSessionId }
 
     // ---- UI ----------------------------------------------------------------------------------------------------
 
     /** Opens the TrackLens panel. */
     @JvmStatic
     public fun openPanel(context: Context) {
-        TrackLensImpl.openPanel(context)
+        guard("openPanel") { TrackLensImpl.openPanel(context) }
     }
 
     /** Shows the floating bubble if it was hidden. */
     @JvmStatic
     public fun showBubble() {
-        TrackLensImpl.showBubble()
+        guard("showBubble") { TrackLensImpl.showBubble() }
     }
 
     /** Hides the floating bubble until [showBubble] or the next app start. */
     @JvmStatic
     public fun hideBubble() {
-        TrackLensImpl.hideBubble()
+        guard("hideBubble") { TrackLensImpl.hideBubble() }
     }
 
     // ---- Data --------------------------------------------------------------------------------------------------
@@ -207,7 +210,13 @@ public object TrackLens {
     @JvmStatic
     @JvmOverloads
     public fun clearAllData(callback: CompletionCallback? = null) {
-        TrackLensImpl.clearAllData(callback)
+        val once = callback?.let(::OnceCompletionCallback)
+        val handled =
+            guard("clearAllData", false) {
+                TrackLensImpl.clearAllData(once)
+                true
+            }
+        if (!handled) guard("clearAllData callback") { once?.onComplete(false) }
     }
 
     /** Exports the session [sessionId] in [format]. [callback] runs on the main thread. */
@@ -218,7 +227,13 @@ public object TrackLens {
         format: ExportFormat,
         callback: ExportCallback,
     ) {
-        TrackLensImpl.exportSession(context, sessionId, format, callback)
+        val once = OnceExportCallback(callback)
+        val handled =
+            guard("exportSession", false) {
+                TrackLensImpl.exportSession(context, sessionId, format, once)
+                true
+            }
+        if (!handled) guard("exportSession callback") { once.onFailed(INTERNAL_ERROR) }
     }
 
     // ---- Observation -------------------------------------------------------------------------------------------
@@ -232,5 +247,7 @@ public object TrackLens {
     public fun addListener(
         listener: TrackLensListener,
         executor: Executor? = null,
-    ): Subscription = TrackLensImpl.addListener(listener, executor)
+    ): Subscription = guard("addListener", Subscription {}) { TrackLensImpl.addListener(listener, executor) }
+
+    private const val INTERNAL_ERROR = "TrackLens hit an internal error; see its diagnostics view."
 }

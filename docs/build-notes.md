@@ -173,6 +173,28 @@ Findings:
 - **Robolectric** runs the Android-dependent tests on the JVM at SDK 35 (`src/test/resources/robolectric.properties`); the newest level this Robolectric version is known to support. It downloads its Android runtime jar on first use (into `~/.m2`, outside the Gradle cache).
 - **Contract scope:** these tests describe the promises of the public API, so later tasks must keep them passing as the stubs are replaced. Implementation details belong in each module's own tests.
 
+## Never throw: guards, diagnostics and the kill switch (Task 11)
+
+Code lives in `tracklens-core/src/main/kotlin/io/github/tracklens/internal/`.
+
+| Piece | Behavior |
+|---|---|
+| `guard(operation, fallback) { … }` (`Failures.kt`) | Wraps every public `TrackLens` call. Catches every `Throwable`, including `LinkageError`s from dependency mismatches, records it, and returns a safe default. `wrap()` falls back to the host's own delegate, so forwarding survives. Restores the interrupt flag after an `InterruptedException`. |
+| Fatal VM errors | An `OutOfMemoryError` or `StackOverflowError` anywhere engages the kill switch (`TrackLens.isEnabled = false`). |
+| `CircuitBreaker` | Per component (`Component` enum). After 5 consecutive failures the component is turned off and no longer called, while the rest of TrackLens keeps working; a success resets the count. |
+| `Diagnostics` | In-memory ring of the latest 200 entries (component, level, message, exception class + message + 12 frames). `report()` never throws, even for a `Throwable` whose getters throw. Logcat (tag `TrackLens`) gets only the first 10 reports per component, so a failing loop can't flood it. Persisted to the database in Phase 2; shown in the diagnostics view from Task 19. |
+| Kill switch | `TrackLens.isEnabled` / `TrackLensConfig.enabled`. Checked first in every logging call (two volatile reads: installed-and-active, then enabled). |
+| Callbacks exactly once | `OnceCompletionCallback` / `OnceExportCallback`. If the implementation fails before answering, the facade answers `false` / `onFailed`, and a late second answer is dropped. |
+| `install()` checks (`InstallGate`) | Inactive below API 23 (`MIN_SUPPORTED_SDK`, must equal `android-minSdk`) and in secondary processes when `mainProcessOnly`. An unknown process name counts as main. A non-debuggable build gets an ERROR diagnostic plus a Logcat error pointing to `tracklens-noop`; TrackLens stays active. |
+| `EventSink` | Where accepted logging calls go, behind the pipeline breaker. `NONE` for now; Task 13 installs the pipeline. Tests install failing sinks. |
+
+**Proven** (`FaultInjectionTest` and the other `tracklens-core` tests, 24 in total):
+- 24 logging calls against a sink that always throws: nothing reached the caller, and the sink was called exactly 5 times before its breaker opened.
+- An `OutOfMemoryError` from the sink turned TrackLens off.
+- `wrap()` kept forwarding while the pipeline was broken.
+
+**Testing note:** the `TrackLens` facade is a process-wide singleton, so core tests call `TrackLensImpl.resetForTests()` before and after each test.
+
 ## Environment quirks (local machine)
 
 - **Expected warning:** Gradle on JDK 25 prints `sun.misc.Unsafe` warnings from its bundled protobuf. They are harmless.
