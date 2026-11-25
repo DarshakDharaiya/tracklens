@@ -79,6 +79,7 @@ internal object TrackLensImpl {
                     clock = Clock.Android,
                     dispatcher = EventPipeline.newPipelineDispatcher(),
                     listeners = listeners,
+                    redactor = Redactor(config.redaction),
                 ).also { it.start() }
             pipeline = started
             eventSink = started

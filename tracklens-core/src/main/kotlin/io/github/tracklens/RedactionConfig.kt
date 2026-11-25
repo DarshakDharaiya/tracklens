@@ -30,11 +30,15 @@ public class RedactionPattern internal constructor(
         @JvmField
         public val EMAIL: RedactionPattern = RedactionPattern("email", """[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}""")
 
-        /** Phone numbers with at least 8 digits, with optional `+`, spaces, dashes and parentheses. */
+        /**
+         * Phone numbers written as phone numbers: international with a leading `+` (`+44 20 7946 0958`), or grouped
+         * with separators (`(415) 555-0100`, `415.555.0100`). Plain digit runs such as order ids are left alone.
+         */
         @JvmField
-        public val PHONE: RedactionPattern = RedactionPattern("phone", """\+?\d[\d ()-]{6,}\d""")
+        public val PHONE: RedactionPattern =
+            RedactionPattern("phone", """\+\d[\d ()-]{6,}\d|\(?\b\d{3}\)?[ .-]\d{3}[ .-]\d{4}\b""")
 
-        /** Payment card numbers (13–19 digits, optionally grouped). */
+        /** Payment card numbers: 13–19 digits, optionally grouped, that pass the Luhn checksum. */
         @JvmField
         public val CREDIT_CARD: RedactionPattern = RedactionPattern("card", """\b(?:\d[ -]?){12,18}\d\b""")
 
@@ -80,7 +84,7 @@ public class RedactionConfig internal constructor(
     /** Builds a [RedactionConfig], starting from the defaults described on [RedactionConfig]. */
     @TrackLensDsl
     public class Builder() {
-        internal val keys = linkedSetOf("password", "*token*", "email", "phone")
+        internal val keys = linkedSetOf("*password*", "*token*", "*secret*", "*email*", "*phone*")
         internal val patterns = mutableListOf(RedactionPattern.EMAIL, RedactionPattern.PHONE, RedactionPattern.CREDIT_CARD)
         internal var replacement = "[REDACTED]"
         internal var hashValues = false

@@ -249,6 +249,25 @@ Targets: normalization ≤ 5 µs (Task 12) and `log()` p50 < 10 µs / p99 < 100 
 
 **Build fix:** `dependencyGuardBaseline` also declares the repository as its output, so the repository scans now run after both dependency-guard tasks.
 
+## Redaction (Task 14)
+
+`Redactor` (`tracklens-core/.../internal/Redactor.kt`) is built once from `RedactionConfig`. It runs on the pipeline thread before an event reaches the ring buffer, listeners or (later) storage. The host's SDK still gets the original values through `wrap()`. Validation (Task 38) will check the raw values in the marked slot just before it.
+
+| Rule | Behavior |
+|---|---|
+| Key rules (`keys`) | Case-insensitive; `*` = any characters. A matching parameter is replaced entirely, whatever its type, at any depth (nested maps, `items` lists). Defaults: `*password*`, `*token*`, `*secret*`, `*email*`, `*phone*`. |
+| Value patterns (`patterns`) | Matches are replaced inside strings and `UnknownValue` text. `Long`/`Int`/`BigInteger` values with 8+ digits are checked too, so a card number logged as a `Long` is caught. Defaults: `EMAIL`, `PHONE`, `CREDIT_CARD`. |
+| `CREDIT_CARD` | Replaced only if the digits (13–19) pass the Luhn checksum, so ids and timestamps survive. |
+| `PHONE` | Tightened in Task 14: needs a leading `+` or separators (`(415) 555-0100`, `415.555.0100`), so plain digit runs such as order ids are left alone. |
+| Replacement | `[REDACTED]`, or with `hashValues` a `sha256:` + 8 hex prefix (unsalted, so equal values stay comparable across sessions). |
+| User id | `HASH` (default), `MASK` (`u*****2`) or `NONE`. |
+| User properties | The property name goes through the key rules; the value through the patterns. |
+| Invalid custom regex | Reported in diagnostics and skipped; never throws. |
+
+**Proven:** `RedactorTest` covers every rule (13 tests). `RedactionLeakTest` sends six secrets through the real pipeline: an e-mail at several depths, a card number as text and as a `Long`, a phone number, a password, a token and a user id. None of them appears in the ring buffer or in what listeners received.
+
+**Note:** Python string escapes once turned `\b` into backspace characters in a regex. Write regex-bearing code with the file writer, not through Python string literals.
+
 ## Environment quirks (local machine)
 
 - **Expected warning:** Gradle on JDK 25 prints `sun.misc.Unsafe` warnings from its bundled protobuf. They are harmless.

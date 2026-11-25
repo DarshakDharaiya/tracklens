@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicLong
  * Pipeline thread (one consumer, in queue order): session and sequence number, current screen, ring buffer,
  * listeners, and a [LiveSnapshot] published at most every [PUBLISH_INTERVAL_MILLIS].
  *
- * Redaction (Task 14), validation (Task 38) and storage (Task 23) join the consumer later. Until sessions arrive
+ * Redaction runs here (Task 14); validation (Task 38) and storage (Task 23) join the consumer later. Until sessions arrive
  * (Task 25) the pipeline runs one implicit session from its creation.
  */
 @Suppress("TooManyFunctions") // EventSink methods plus start/close/awaitIdle and one function per processing step.
@@ -41,6 +41,8 @@ internal class EventPipeline(
     private val clock: Clock,
     private val dispatcher: CoroutineDispatcher,
     private val listeners: ListenerRegistry,
+    /** Applied on this thread before an event reaches the ring buffer, listeners or storage. */
+    private val redactor: Redactor = Redactor.NONE,
 ) : EventSink {
     private val queue = Channel<PipelineMessage>(Channel.UNLIMITED)
     private val pendingCalls = AtomicInteger()
@@ -96,12 +98,12 @@ internal class EventPipeline(
         name: String,
         value: String?,
         source: String?,
-    ) = offer(EventKind.USER_PROPERTY, name, NormalizedParams(mapOf("value" to value), truncated = false), source)
+    ) = offer(EventKind.USER_PROPERTY, name, NormalizedParams(mapOf(VALUE_KEY to value), truncated = false), source)
 
     override fun setUserId(
         userId: String?,
         source: String?,
-    ) = offer(EventKind.USER_ID, USER_ID_NAME, NormalizedParams(mapOf("user_id" to userId), truncated = false), source)
+    ) = offer(EventKind.USER_ID, USER_ID_NAME, NormalizedParams(mapOf(USER_ID_NAME to userId), truncated = false), source)
 
     override fun setScreen(
         name: String,
@@ -169,6 +171,8 @@ internal class EventPipeline(
 
     private fun record(call: PipelineMessage.Call) {
         if (call.kind == EventKind.SCREEN) currentScreen = call.name
+        // Task 38: validation checks the raw values here, before redaction replaces them.
+        val params = redact(call)
         val event =
             TrackedEvent(
                 sequence = ++sequence,
@@ -176,7 +180,7 @@ internal class EventPipeline(
                 elapsedMillis = TimeUnit.NANOSECONDS.toMillis(call.elapsedNanos - sessionStartNanos).coerceAtLeast(0),
                 name = call.name,
                 kind = call.kind,
-                params = call.params.values,
+                params = params,
                 screen = currentScreen,
                 sessionId = sessionId,
                 source = call.source,
@@ -188,6 +192,15 @@ internal class EventPipeline(
         listeners.dispatch(event)
         markDirty()
     }
+
+    /** Redaction by kind; the raw values never leave this function. */
+    private fun redact(call: PipelineMessage.Call): Map<String, Any?> =
+        when (call.kind) {
+            EventKind.EVENT -> redactor.redactParams(call.params.values).values
+            EventKind.USER_PROPERTY -> mapOf(VALUE_KEY to redactor.redactUserProperty(call.name, call.params.values[VALUE_KEY] as String?))
+            EventKind.USER_ID -> mapOf(USER_ID_NAME to redactor.redactUserId(call.params.values[USER_ID_NAME] as String?))
+            EventKind.SCREEN -> call.params.values
+        }
 
     /** Publishes now unless one went out less than [PUBLISH_INTERVAL_MILLIS] ago; then once that interval ends. */
     private fun markDirty() {
@@ -211,6 +224,7 @@ internal class EventPipeline(
         const val PUBLISH_INTERVAL_MILLIS = 100L
         const val DEFAULT_SOFT_CAP = 10_000
         const val USER_ID_NAME = "user_id"
+        const val VALUE_KEY = "value"
         private const val AWAIT_IDLE_TIMEOUT_MILLIS = 10_000L
         private const val THREAD_NAME = "TrackLens-Pipeline"
 

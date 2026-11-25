@@ -55,7 +55,7 @@ class ConfigContractTest {
         val defaults = TrackLensConfig.DEFAULT.redaction
 
         assertTrue(defaults.patterns.containsAll(listOf(RedactionPattern.EMAIL, RedactionPattern.PHONE, RedactionPattern.CREDIT_CARD)))
-        assertTrue("email" in defaults.keys)
+        assertTrue("*email*" in defaults.keys)
         assertEquals(UserIdRedaction.HASH, defaults.userId)
         assertTrue(trackLensConfig { redaction { clear() } }.redaction.patterns.isEmpty())
     }
