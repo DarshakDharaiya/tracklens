@@ -26,6 +26,7 @@ class RootConventionPlugin : Plugin<Project> {
 
             registerDependencyPolicyCheck()
             registerNoopApiParityCheck()
+            orderRepositoryScansAfterDependencyGuard()
             configureSpotless()
             configureDetekt()
         }
@@ -61,6 +62,18 @@ class RootConventionPlugin : Plugin<Project> {
                 mustRunAfter(":tracklens-core:apiDump", ":tracklens-noop:apiDump")
             }
         tasks.named("check") { dependsOn(checkNoopApiParity) }
+    }
+
+    /**
+     * dependency-guard 0.5.0 declares the repository directory as an output of every `dependencyGuard` task, so Gradle
+     * rejects any task that scans the repository (Spotless, detekt, the policy check) unless it is ordered after them.
+     * It only surfaced once enough tasks ran in one build (Task 8); declaring the order keeps runs deterministic.
+     */
+    private fun Project.orderRepositoryScansAfterDependencyGuard() {
+        val scansRepository = { name: String -> name.startsWith("spotless") || name == "detekt" || name == "checkDependencyPolicy" }
+        tasks.matching { scansRepository(it.name) }.configureEach {
+            mustRunAfter(subprojects.map { module -> module.tasks.matching { it.name == "dependencyGuard" } })
+        }
     }
 
     private fun Project.configureSpotless() {

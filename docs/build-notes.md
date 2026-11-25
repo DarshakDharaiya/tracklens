@@ -140,10 +140,22 @@ Findings:
 - **Pinned actions:** every third-party action is pinned to a full commit SHA with its version in a comment (checkout v7.0.1, setup-java v6.3.0, setup-gradle v6.4.1, upload-artifact v7.0.2). Bump them deliberately.
 - **Jobs use `--continue`,** so one run reports every failing gate, not just the first.
 - **Android SDK:** GitHub's Ubuntu runners ship an SDK with accepted licenses, and AGP downloads any missing platform (here android-37) on first use.
-- **Verified locally:** the workflow and composite action parse (SnakeYAML), every external `uses:` is SHA-pinned, `ci-ok` needs only existing jobs, and each job's exact Gradle command passes. **Not yet verified on GitHub:** the repository isn't on GitHub yet, so cold-runner timing (target: all green in under 15 minutes) is unmeasured.
-- **Before the first push:**
+- **Verified locally:** the workflow and composite action parse (SnakeYAML), every external `uses:` is SHA-pinned, `ci-ok` needs only existing jobs, and each job's exact Gradle command passes. **Verified on GitHub (2026-11-25):** the first run (push of `a3973b2` to `main`, cold cache) passed every job in about 5.5 minutes wall-clock: static 2m47s, unit 2m38s, api 2m11s, build 4m34s, ci-ok 4s. Target was under 15 minutes. Pull-request runs read the cache that `main` writes, so they should be faster.
+- **Repository setup (done in Task 7):**
   - Commit `gradlew` as executable (`git add --chmod=+x gradlew`), or every Linux job fails with "Permission denied". Windows checkouts don't record the bit.
   - `.gitignore` now ignores every module's `build/` and `.kotlin/` (the template ignored only the root `build/`).
+
+## Public API (Task 8)
+
+- **Where it lives:** the public API is the `io.github.tracklens` package of tracklens-core; implementation goes in `io.github.tracklens.internal`. `tracklens-core/api/tracklens-core.api` is the authoritative record (54 classes).
+- **Shared types:** every file directly in that package, except `TrackLens.kt`, must be plain public types (configuration, events, callbacks, `TrackLensBundles`). The no-op's `copySharedApiSources` task copies them into `tracklens-noop/build/generated/source/sharedApi`, so both artifacts share one source. Only the `TrackLens` facade is written twice. If a shared file references core internals, the no-op stops compiling; that's intended.
+- **KDoc:** every public declaration in library modules needs it. detekt's `UndocumentedPublicClass/Function/Property` rules enforce it, so it runs in CI. Dokka is left for the docs site (Task 49) because its Android support, like BCV's, expects the `kotlin-android` plugin.
+- **Clean ABI choices:**
+  - Config classes use `internal` (not `private`) constructors, so Kotlin emits no synthetic accessor constructors.
+  - The library convention sets `jvmDefault = NO_COMPATIBILITY`, so interface default methods are real Java default methods with no `DefaultImpls` classes.
+- **`wrap` parameter order:** `wrap(source = default, delegate)`, with the delegate last, so `TrackLens.wrap(source = "firebase") { name, params -> … }` compiles. The first order, delegate first, broke that documented usage; a probe compiling host-style code against both artifacts caught it.
+- **Probe for API changes:** to check host-facing usage, add a temporary file to `sample/src/main` and run `:sample:compileDebugKotlin :sample:compileReleaseKotlin`. Debug compiles against tracklens-core and release against tracklens-noop. Task 10's contract tests make this permanent.
+- **Task ordering finding:** dependency-guard 0.5.0 declares the repository directory as an output of every `dependencyGuard` task. Any task scanning the repository (Spotless, detekt, `checkDependencyPolicy`) therefore needs a declared order, or Gradle rejects the build. It first showed up when more tasks ran in one build. `tracklens.root` orders those scans after `dependencyGuard`.
 
 ## Environment quirks (local machine)
 

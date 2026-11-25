@@ -4,6 +4,19 @@
 build:
   maxIssues: 0
 
+# Every public declaration of a library module needs KDoc (plan Task 8). Explicit API mode means
+# "public" is always written out, so these rules see exactly the published API.
+comments:
+  UndocumentedPublicClass:
+    active: true
+    excludes: &notLibraryCode ['**/test/**', '**/androidTest/**', '**/sample/**', '**/build-logic/**', '**/benchmark/**']
+  UndocumentedPublicFunction:
+    active: true
+    excludes: *notLibraryCode
+  UndocumentedPublicProperty:
+    active: true
+    excludes: *notLibraryCode
+
 naming:
   FunctionNaming:
     # Composables are PascalCase by convention.

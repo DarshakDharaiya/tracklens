@@ -164,7 +164,8 @@ public object TrackLens {
      * is the same in debug and release. The noop returns [delegate] itself.
      */
     @JvmStatic @JvmOverloads
-    public fun wrap(delegate: AnalyticsDelegate, source: String = AnalyticsDelegate.DEFAULT_SOURCE): AnalyticsDelegate
+    // `delegate` last so a trailing lambda works: TrackLens.wrap(source = "firebase") { name, params -> ... } (fixed in Task 8)
+    public fun wrap(source: String = AnalyticsDelegate.DEFAULT_SOURCE, delegate: AnalyticsDelegate): AnalyticsDelegate
 }
 
 /** Pure conversion helpers. Implemented for real in BOTH core and noop, because release forwarding relies on them. */
@@ -255,6 +256,8 @@ public object ValidationIssues {
 
 ### 2.8 Configuration (builder plus Kotlin DSL)
 
+> **As built (Task 8):** builders expose **fluent methods only** (`backgroundTimeout(30, SECONDS)`, `trackingPlanAsset("…")`), not `var` properties, so Kotlin and Java share one API. Out-of-range values are clamped, never thrown. Severity overrides are `severity(code, severity)`. The signatures below show the shape; `tracklens-core/api/tracklens-core.api` is authoritative.
+
 ```kotlin
 @DslMarker public annotation class TrackLensDsl
 
@@ -340,7 +343,7 @@ public class ValidationConfig /* Builder */ {
     public val rules: List<ValidationRule>
     public val severityOverrides: Map<String, Severity>
     public val disabledCodes: Set<String>
-    // Builder: rule(r), override(code, severity), disable(code)
+    // Builder: rule(r), severity(code, severity), disable(code)
 }
 public fun interface TrackingPlanProvider { public fun open(): InputStream? }
 public class BreadcrumbConfig /* Builder */ {
@@ -364,7 +367,7 @@ public class ThemeConfig /* Builder */ {
 TrackLens.install(this, trackLensConfig {
     sessions { backgroundTimeout(30, TimeUnit.SECONDS) }
     redaction { keys("email", "phone", "*_token"); patterns(RedactionPattern.EMAIL, RedactionPattern.PHONE) }
-    validation { trackingPlanAsset = "tracklens/tracking_plan.yaml"; override("FB_PARAM_VALUE_TOO_LONG", Severity.ERROR) }
+    validation { trackingPlanAsset("tracklens/tracking_plan.yaml"); severity("FB_PARAM_VALUE_TOO_LONG", Severity.ERROR) }
 })
 val analytics: AnalyticsDelegate = TrackLens.wrap(source = "firebase") { name, params -> firebase.logEvent(name, params.toBundle()) }
 ```
@@ -1169,8 +1172,8 @@ Each task is sized for one to three focused days and ends with a reviewable PR.
 
 ### Phase 1: MVP
 
-8. **Public API skeleton in core.** All §2 signatures with KDoc, bodies delegating to an internal `TrackLensImpl` (stubbed). **Done when:** `apiDump` is committed and reviewed and Dokka produces no undocumented-public warnings.
-9. **Noop mirror.** Identical API. `wrap` returns the delegate, and Bundle helpers are implemented for real. minSdk 21. **Done when:** `checkNoopApiParity` and dependency-guard pass.
+8. **Public API skeleton in core.** All §2 signatures with KDoc, bodies delegating to an internal `TrackLensImpl` (stubbed). **Done when:** `apiDump` is committed and reviewed and every public declaration has KDoc. *(Done: KDoc is enforced by detekt's `UndocumentedPublic*` rules; Dokka's Android support also expects the `kotlin-android` plugin, so it is set up and verified with the docs site in Task 49.)*
+9. **Noop mirror.** Identical API. `wrap` returns the delegate, and Bundle helpers are implemented for real. minSdk 21. **Done when:** `checkNoopApiParity` and dependency-guard pass. *(Done in Task 8, because the parity gate requires it: the no-op has its own `TrackLens` facade, and every other public type is copied from tracklens-core at build time.)*
 10. **Contract test suite** run against core and noop, including a Java interop source set. **Done when:** both variants pass, and a noop that swallows `wrap` forwarding fails the suite.
 11. **Guard, diagnostics and kill switch** (`guard {}`, ring plus breakers, `isEnabled`, the non-debuggable warning). **Done when:** fault-injection tests show no exception escapes and the breaker trips after 5 failures.
 12. **Param normalization** (`Map`, `Bundle`, nested, arrays, unknown objects, depth and size limits). **Done when:** unit tests cover every Bundle value type, and the benchmark shows normalizing 10 params takes ≤ 5 µs.

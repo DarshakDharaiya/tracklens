@@ -1,8 +1,432 @@
+public abstract interface class io/github/tracklens/AnalyticsDelegate {
+	public static final field Companion Lio/github/tracklens/AnalyticsDelegate$Companion;
+	public static final field DEFAULT_SOURCE Ljava/lang/String;
+	public abstract fun logEvent (Ljava/lang/String;Ljava/util/Map;)V
+	public fun setUserId (Ljava/lang/String;)V
+	public fun setUserProperty (Ljava/lang/String;Ljava/lang/String;)V
+}
+
+public final class io/github/tracklens/AnalyticsDelegate$Companion {
+	public static final field DEFAULT_SOURCE Ljava/lang/String;
+}
+
+public final class io/github/tracklens/BreadcrumbConfig {
+	public static final field Companion Lio/github/tracklens/BreadcrumbConfig$Companion;
+	public static final field DEFAULT Lio/github/tracklens/BreadcrumbConfig;
+	public final fun getActivities ()Z
+	public final fun getFragments ()Z
+	public final fun getScreenNameResolver ()Lio/github/tracklens/ScreenNameResolver;
+	public final fun getScreenViewEventAsScreen ()Z
+	public final fun newBuilder ()Lio/github/tracklens/BreadcrumbConfig$Builder;
+}
+
+public final class io/github/tracklens/BreadcrumbConfig$Builder {
+	public fun <init> ()V
+	public final fun activities (Z)Lio/github/tracklens/BreadcrumbConfig$Builder;
+	public final fun build ()Lio/github/tracklens/BreadcrumbConfig;
+	public final fun fragments (Z)Lio/github/tracklens/BreadcrumbConfig$Builder;
+	public final fun screenNameResolver (Lio/github/tracklens/ScreenNameResolver;)Lio/github/tracklens/BreadcrumbConfig$Builder;
+	public final fun screenViewEventAsScreen (Z)Lio/github/tracklens/BreadcrumbConfig$Builder;
+}
+
+public final class io/github/tracklens/BreadcrumbConfig$Companion {
+}
+
+public final class io/github/tracklens/BubbleConfig {
+	public static final field Companion Lio/github/tracklens/BubbleConfig$Companion;
+	public static final field DEFAULT Lio/github/tracklens/BubbleConfig;
+	public final fun getExcludedActivities ()Ljava/util/Set;
+	public final fun getInitialEdge ()Lio/github/tracklens/Edge;
+	public final fun getOverlayMode ()Lio/github/tracklens/OverlayMode;
+	public final fun getShowAppShortcut ()Z
+	public final fun newBuilder ()Lio/github/tracklens/BubbleConfig$Builder;
+}
+
+public final class io/github/tracklens/BubbleConfig$Builder {
+	public fun <init> ()V
+	public final fun build ()Lio/github/tracklens/BubbleConfig;
+	public final fun excludeActivities ([Ljava/lang/String;)Lio/github/tracklens/BubbleConfig$Builder;
+	public final fun initialEdge (Lio/github/tracklens/Edge;)Lio/github/tracklens/BubbleConfig$Builder;
+	public final fun overlayMode (Lio/github/tracklens/OverlayMode;)Lio/github/tracklens/BubbleConfig$Builder;
+	public final fun showAppShortcut (Z)Lio/github/tracklens/BubbleConfig$Builder;
+}
+
+public final class io/github/tracklens/BubbleConfig$Companion {
+}
+
+public abstract interface class io/github/tracklens/CompletionCallback {
+	public abstract fun onComplete (Z)V
+}
+
+public final class io/github/tracklens/DarkMode : java/lang/Enum {
+	public static final field DARK Lio/github/tracklens/DarkMode;
+	public static final field LIGHT Lio/github/tracklens/DarkMode;
+	public static final field SYSTEM Lio/github/tracklens/DarkMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/tracklens/DarkMode;
+	public static fun values ()[Lio/github/tracklens/DarkMode;
+}
+
+public final class io/github/tracklens/Edge : java/lang/Enum {
+	public static final field END Lio/github/tracklens/Edge;
+	public static final field START Lio/github/tracklens/Edge;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/tracklens/Edge;
+	public static fun values ()[Lio/github/tracklens/Edge;
+}
+
+public abstract interface class io/github/tracklens/EventCategorizer {
+	public static final field Companion Lio/github/tracklens/EventCategorizer$Companion;
+	public static final field NONE Lio/github/tracklens/EventCategorizer;
+	public abstract fun categoryOf (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class io/github/tracklens/EventCategorizer$Companion {
+}
+
+public final class io/github/tracklens/EventKind : java/lang/Enum {
+	public static final field EVENT Lio/github/tracklens/EventKind;
+	public static final field SCREEN Lio/github/tracklens/EventKind;
+	public static final field USER_ID Lio/github/tracklens/EventKind;
+	public static final field USER_PROPERTY Lio/github/tracklens/EventKind;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/tracklens/EventKind;
+	public static fun values ()[Lio/github/tracklens/EventKind;
+}
+
+public abstract interface class io/github/tracklens/ExportCallback {
+	public abstract fun onExported (Landroid/net/Uri;Ljava/lang/String;)V
+	public abstract fun onFailed (Ljava/lang/String;)V
+}
+
+public final class io/github/tracklens/ExportFormat : java/lang/Enum {
+	public static final field CSV Lio/github/tracklens/ExportFormat;
+	public static final field HTML Lio/github/tracklens/ExportFormat;
+	public static final field JSON Lio/github/tracklens/ExportFormat;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/tracklens/ExportFormat;
+	public static fun values ()[Lio/github/tracklens/ExportFormat;
+}
+
 public abstract interface annotation class io/github/tracklens/InternalTrackLensApi : java/lang/annotation/Annotation {
+}
+
+public final class io/github/tracklens/OverlayMode : java/lang/Enum {
+	public static final field IN_APP Lio/github/tracklens/OverlayMode;
+	public static final field NONE Lio/github/tracklens/OverlayMode;
+	public static final field SYSTEM_OVERLAY_IF_PERMITTED Lio/github/tracklens/OverlayMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/tracklens/OverlayMode;
+	public static fun values ()[Lio/github/tracklens/OverlayMode;
+}
+
+public final class io/github/tracklens/RedactionConfig {
+	public static final field Companion Lio/github/tracklens/RedactionConfig$Companion;
+	public static final field DEFAULT Lio/github/tracklens/RedactionConfig;
+	public final fun getHashValues ()Z
+	public final fun getKeys ()Ljava/util/Set;
+	public final fun getPatterns ()Ljava/util/List;
+	public final fun getReplacement ()Ljava/lang/String;
+	public final fun getUserId ()Lio/github/tracklens/UserIdRedaction;
+	public final fun newBuilder ()Lio/github/tracklens/RedactionConfig$Builder;
+}
+
+public final class io/github/tracklens/RedactionConfig$Builder {
+	public fun <init> ()V
+	public final fun build ()Lio/github/tracklens/RedactionConfig;
+	public final fun clear ()Lio/github/tracklens/RedactionConfig$Builder;
+	public final fun hashValues (Z)Lio/github/tracklens/RedactionConfig$Builder;
+	public final fun keys ([Ljava/lang/String;)Lio/github/tracklens/RedactionConfig$Builder;
+	public final fun pattern (Ljava/lang/String;)Lio/github/tracklens/RedactionConfig$Builder;
+	public final fun patterns ([Lio/github/tracklens/RedactionPattern;)Lio/github/tracklens/RedactionConfig$Builder;
+	public final fun replacement (Ljava/lang/String;)Lio/github/tracklens/RedactionConfig$Builder;
+	public final fun userId (Lio/github/tracklens/UserIdRedaction;)Lio/github/tracklens/RedactionConfig$Builder;
+}
+
+public final class io/github/tracklens/RedactionConfig$Companion {
+}
+
+public final class io/github/tracklens/RedactionPattern {
+	public static final field CREDIT_CARD Lio/github/tracklens/RedactionPattern;
+	public static final field Companion Lio/github/tracklens/RedactionPattern$Companion;
+	public static final field EMAIL Lio/github/tracklens/RedactionPattern;
+	public static final field IPV4 Lio/github/tracklens/RedactionPattern;
+	public static final field PHONE Lio/github/tracklens/RedactionPattern;
+	public static final fun custom (Ljava/lang/String;Ljava/lang/String;)Lio/github/tracklens/RedactionPattern;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getRegex ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/tracklens/RedactionPattern$Companion {
+	public final fun custom (Ljava/lang/String;Ljava/lang/String;)Lio/github/tracklens/RedactionPattern;
+}
+
+public final class io/github/tracklens/RetentionConfig {
+	public static final field Companion Lio/github/tracklens/RetentionConfig$Companion;
+	public static final field DEFAULT Lio/github/tracklens/RetentionConfig;
+	public final fun getMaxAgeMillis ()J
+	public final fun getMaxEventsPerSession ()I
+	public final fun getMaxSessions ()I
+	public final fun newBuilder ()Lio/github/tracklens/RetentionConfig$Builder;
+}
+
+public final class io/github/tracklens/RetentionConfig$Builder {
+	public fun <init> ()V
+	public final fun build ()Lio/github/tracklens/RetentionConfig;
+	public final fun maxAge (JLjava/util/concurrent/TimeUnit;)Lio/github/tracklens/RetentionConfig$Builder;
+	public final fun maxAgeMillis (J)Lio/github/tracklens/RetentionConfig$Builder;
+	public final fun maxEventsPerSession (I)Lio/github/tracklens/RetentionConfig$Builder;
+	public final fun maxSessions (I)Lio/github/tracklens/RetentionConfig$Builder;
+}
+
+public final class io/github/tracklens/RetentionConfig$Companion {
+}
+
+public abstract interface class io/github/tracklens/ScreenNameResolver {
+	public static final field Companion Lio/github/tracklens/ScreenNameResolver$Companion;
+	public static final field SIMPLE_CLASS_NAME Lio/github/tracklens/ScreenNameResolver;
+	public abstract fun resolve (Ljava/lang/Object;)Ljava/lang/String;
+}
+
+public final class io/github/tracklens/ScreenNameResolver$Companion {
+}
+
+public final class io/github/tracklens/SessionConfig {
+	public static final field Companion Lio/github/tracklens/SessionConfig$Companion;
+	public static final field DEFAULT Lio/github/tracklens/SessionConfig;
+	public final fun getAutoStart ()Z
+	public final fun getBackgroundTimeoutMillis ()J
+	public final fun getManualSessionsSurviveBackground ()Z
+	public final fun newBuilder ()Lio/github/tracklens/SessionConfig$Builder;
+}
+
+public final class io/github/tracklens/SessionConfig$Builder {
+	public fun <init> ()V
+	public final fun autoStart (Z)Lio/github/tracklens/SessionConfig$Builder;
+	public final fun backgroundTimeout (JLjava/util/concurrent/TimeUnit;)Lio/github/tracklens/SessionConfig$Builder;
+	public final fun backgroundTimeoutMillis (J)Lio/github/tracklens/SessionConfig$Builder;
+	public final fun build ()Lio/github/tracklens/SessionConfig;
+	public final fun manualSessionsSurviveBackground (Z)Lio/github/tracklens/SessionConfig$Builder;
+}
+
+public final class io/github/tracklens/SessionConfig$Companion {
+}
+
+public final class io/github/tracklens/Severity : java/lang/Enum {
+	public static final field ERROR Lio/github/tracklens/Severity;
+	public static final field INFO Lio/github/tracklens/Severity;
+	public static final field WARNING Lio/github/tracklens/Severity;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/tracklens/Severity;
+	public static fun values ()[Lio/github/tracklens/Severity;
+}
+
+public abstract interface class io/github/tracklens/Subscription {
+	public abstract fun cancel ()V
+}
+
+public final class io/github/tracklens/ThemeConfig {
+	public static final field Companion Lio/github/tracklens/ThemeConfig$Companion;
+	public static final field DEFAULT Lio/github/tracklens/ThemeConfig;
+	public final fun getDarkMode ()Lio/github/tracklens/DarkMode;
+	public final fun getDynamicColor ()Z
+	public final fun getSeedColorArgb ()Ljava/lang/Integer;
+	public final fun newBuilder ()Lio/github/tracklens/ThemeConfig$Builder;
+}
+
+public final class io/github/tracklens/ThemeConfig$Builder {
+	public fun <init> ()V
+	public final fun build ()Lio/github/tracklens/ThemeConfig;
+	public final fun darkMode (Lio/github/tracklens/DarkMode;)Lio/github/tracklens/ThemeConfig$Builder;
+	public final fun dynamicColor (Z)Lio/github/tracklens/ThemeConfig$Builder;
+	public final fun seedColor (Ljava/lang/Integer;)Lio/github/tracklens/ThemeConfig$Builder;
+}
+
+public final class io/github/tracklens/ThemeConfig$Companion {
 }
 
 public final class io/github/tracklens/TrackLens {
 	public static final field INSTANCE Lio/github/tracklens/TrackLens;
+	public static final fun addListener (Lio/github/tracklens/TrackLensListener;)Lio/github/tracklens/Subscription;
+	public static final fun addListener (Lio/github/tracklens/TrackLensListener;Ljava/util/concurrent/Executor;)Lio/github/tracklens/Subscription;
+	public static synthetic fun addListener$default (Lio/github/tracklens/TrackLensListener;Ljava/util/concurrent/Executor;ILjava/lang/Object;)Lio/github/tracklens/Subscription;
+	public static final fun clearAllData ()V
+	public static final fun clearAllData (Lio/github/tracklens/CompletionCallback;)V
+	public static synthetic fun clearAllData$default (Lio/github/tracklens/CompletionCallback;ILjava/lang/Object;)V
+	public static final fun endSession ()V
+	public static final fun exportSession (Landroid/content/Context;Ljava/lang/String;Lio/github/tracklens/ExportFormat;Lio/github/tracklens/ExportCallback;)V
+	public static final fun getCurrentSessionId ()Ljava/lang/String;
+	public static final fun getLibraryVersion ()Ljava/lang/String;
+	public static final fun hideBubble ()V
+	public static final fun install (Landroid/app/Application;)V
+	public static final fun install (Landroid/app/Application;Lio/github/tracklens/TrackLensConfig;)V
+	public static synthetic fun install$default (Landroid/app/Application;Lio/github/tracklens/TrackLensConfig;ILjava/lang/Object;)V
+	public static final fun isEnabled ()Z
+	public static final fun isInstalled ()Z
 	public static final fun isNoOp ()Z
+	public static final fun log (Ljava/lang/String;)V
+	public static final fun log (Ljava/lang/String;Landroid/os/Bundle;)V
+	public static final fun log (Ljava/lang/String;Landroid/os/Bundle;Ljava/lang/String;)V
+	public static final fun log (Ljava/lang/String;Ljava/util/Map;)V
+	public static final fun log (Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;)V
+	public static synthetic fun log$default (Ljava/lang/String;Landroid/os/Bundle;Ljava/lang/String;ILjava/lang/Object;)V
+	public static synthetic fun log$default (Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;ILjava/lang/Object;)V
+	public static final fun openPanel (Landroid/content/Context;)V
+	public static final fun setEnabled (Z)V
+	public static final fun setScreen (Ljava/lang/String;)V
+	public static final fun setScreen (Ljava/lang/String;Ljava/lang/String;)V
+	public static synthetic fun setScreen$default (Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public static final fun setSessionLabel (Ljava/lang/String;)V
+	public static final fun setSessionNotes (Ljava/lang/String;)V
+	public static final fun setUserId (Ljava/lang/String;)V
+	public static final fun setUserId (Ljava/lang/String;Ljava/lang/String;)V
+	public static synthetic fun setUserId$default (Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public static final fun setUserProperty (Ljava/lang/String;Ljava/lang/String;)V
+	public static final fun setUserProperty (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static synthetic fun setUserProperty$default (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public static final fun showBubble ()V
+	public static final fun startSession ()V
+	public static final fun startSession (Ljava/lang/String;)V
+	public static synthetic fun startSession$default (Ljava/lang/String;ILjava/lang/Object;)V
+	public static final fun wrap (Lio/github/tracklens/AnalyticsDelegate;)Lio/github/tracklens/AnalyticsDelegate;
+	public static final fun wrap (Ljava/lang/String;Lio/github/tracklens/AnalyticsDelegate;)Lio/github/tracklens/AnalyticsDelegate;
+	public static synthetic fun wrap$default (Ljava/lang/String;Lio/github/tracklens/AnalyticsDelegate;ILjava/lang/Object;)Lio/github/tracklens/AnalyticsDelegate;
+}
+
+public final class io/github/tracklens/TrackLensBundleExtensions {
+	public static final fun toBundle (Ljava/util/Map;)Landroid/os/Bundle;
+}
+
+public final class io/github/tracklens/TrackLensBundles {
+	public static final field INSTANCE Lio/github/tracklens/TrackLensBundles;
+	public static final fun toBundle (Ljava/util/Map;)Landroid/os/Bundle;
+	public static final fun toMap (Landroid/os/Bundle;)Ljava/util/Map;
+}
+
+public final class io/github/tracklens/TrackLensConfig {
+	public static final field Companion Lio/github/tracklens/TrackLensConfig$Companion;
+	public static final field DEFAULT Lio/github/tracklens/TrackLensConfig;
+	public final fun getBreadcrumbs ()Lio/github/tracklens/BreadcrumbConfig;
+	public final fun getBubble ()Lio/github/tracklens/BubbleConfig;
+	public final fun getCategorizer ()Lio/github/tracklens/EventCategorizer;
+	public final fun getEnabled ()Z
+	public final fun getLiveBufferSize ()I
+	public final fun getMainProcessOnly ()Z
+	public final fun getRedaction ()Lio/github/tracklens/RedactionConfig;
+	public final fun getRetention ()Lio/github/tracklens/RetentionConfig;
+	public final fun getSessions ()Lio/github/tracklens/SessionConfig;
+	public final fun getTheme ()Lio/github/tracklens/ThemeConfig;
+	public final fun getValidation ()Lio/github/tracklens/ValidationConfig;
+	public final fun newBuilder ()Lio/github/tracklens/TrackLensConfig$Builder;
+}
+
+public final class io/github/tracklens/TrackLensConfig$Builder {
+	public fun <init> ()V
+	public final fun breadcrumbs (Lio/github/tracklens/BreadcrumbConfig;)Lio/github/tracklens/TrackLensConfig$Builder;
+	public final fun breadcrumbs (Lkotlin/jvm/functions/Function1;)Lio/github/tracklens/TrackLensConfig$Builder;
+	public final fun bubble (Lio/github/tracklens/BubbleConfig;)Lio/github/tracklens/TrackLensConfig$Builder;
+	public final fun bubble (Lkotlin/jvm/functions/Function1;)Lio/github/tracklens/TrackLensConfig$Builder;
+	public final fun build ()Lio/github/tracklens/TrackLensConfig;
+	public final fun categorizer (Lio/github/tracklens/EventCategorizer;)Lio/github/tracklens/TrackLensConfig$Builder;
+	public final fun enabled (Z)Lio/github/tracklens/TrackLensConfig$Builder;
+	public final fun liveBufferSize (I)Lio/github/tracklens/TrackLensConfig$Builder;
+	public final fun mainProcessOnly (Z)Lio/github/tracklens/TrackLensConfig$Builder;
+	public final fun redaction (Lio/github/tracklens/RedactionConfig;)Lio/github/tracklens/TrackLensConfig$Builder;
+	public final fun redaction (Lkotlin/jvm/functions/Function1;)Lio/github/tracklens/TrackLensConfig$Builder;
+	public final fun retention (Lio/github/tracklens/RetentionConfig;)Lio/github/tracklens/TrackLensConfig$Builder;
+	public final fun retention (Lkotlin/jvm/functions/Function1;)Lio/github/tracklens/TrackLensConfig$Builder;
+	public final fun sessions (Lio/github/tracklens/SessionConfig;)Lio/github/tracklens/TrackLensConfig$Builder;
+	public final fun sessions (Lkotlin/jvm/functions/Function1;)Lio/github/tracklens/TrackLensConfig$Builder;
+	public final fun theme (Lio/github/tracklens/ThemeConfig;)Lio/github/tracklens/TrackLensConfig$Builder;
+	public final fun theme (Lkotlin/jvm/functions/Function1;)Lio/github/tracklens/TrackLensConfig$Builder;
+	public final fun validation (Lio/github/tracklens/ValidationConfig;)Lio/github/tracklens/TrackLensConfig$Builder;
+	public final fun validation (Lkotlin/jvm/functions/Function1;)Lio/github/tracklens/TrackLensConfig$Builder;
+}
+
+public final class io/github/tracklens/TrackLensConfig$Companion {
+}
+
+public final class io/github/tracklens/TrackLensConfigs {
+	public static final fun trackLensConfig (Lkotlin/jvm/functions/Function1;)Lio/github/tracklens/TrackLensConfig;
+}
+
+public abstract interface annotation class io/github/tracklens/TrackLensDsl : java/lang/annotation/Annotation {
+}
+
+public abstract interface class io/github/tracklens/TrackLensListener {
+	public abstract fun onEvent (Lio/github/tracklens/TrackedEvent;)V
+}
+
+public final class io/github/tracklens/TrackedEvent {
+	public final fun getElapsedMillis ()J
+	public final fun getIssues ()Ljava/util/List;
+	public final fun getKind ()Lio/github/tracklens/EventKind;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getParams ()Ljava/util/Map;
+	public final fun getScreen ()Ljava/lang/String;
+	public final fun getSequence ()J
+	public final fun getSessionId ()Ljava/lang/String;
+	public final fun getSource ()Ljava/lang/String;
+	public final fun getTimestampMillis ()J
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class io/github/tracklens/TrackingPlanProvider {
+	public abstract fun open ()Ljava/io/InputStream;
+}
+
+public final class io/github/tracklens/UserIdRedaction : java/lang/Enum {
+	public static final field HASH Lio/github/tracklens/UserIdRedaction;
+	public static final field MASK Lio/github/tracklens/UserIdRedaction;
+	public static final field NONE Lio/github/tracklens/UserIdRedaction;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/tracklens/UserIdRedaction;
+	public static fun values ()[Lio/github/tracklens/UserIdRedaction;
+}
+
+public final class io/github/tracklens/ValidationConfig {
+	public static final field Companion Lio/github/tracklens/ValidationConfig$Companion;
+	public static final field DEFAULT Lio/github/tracklens/ValidationConfig;
+	public final fun getDisabledCodes ()Ljava/util/Set;
+	public final fun getFirebaseLimits ()Z
+	public final fun getRules ()Ljava/util/List;
+	public final fun getSeverityOverrides ()Ljava/util/Map;
+	public final fun getTrackingPlanAsset ()Ljava/lang/String;
+	public final fun getTrackingPlanProvider ()Lio/github/tracklens/TrackingPlanProvider;
+	public final fun newBuilder ()Lio/github/tracklens/ValidationConfig$Builder;
+}
+
+public final class io/github/tracklens/ValidationConfig$Builder {
+	public fun <init> ()V
+	public final fun build ()Lio/github/tracklens/ValidationConfig;
+	public final fun disable ([Ljava/lang/String;)Lio/github/tracklens/ValidationConfig$Builder;
+	public final fun firebaseLimits (Z)Lio/github/tracklens/ValidationConfig$Builder;
+	public final fun rule (Lio/github/tracklens/ValidationRule;)Lio/github/tracklens/ValidationConfig$Builder;
+	public final fun severity (Ljava/lang/String;Lio/github/tracklens/Severity;)Lio/github/tracklens/ValidationConfig$Builder;
+	public final fun trackingPlanAsset (Ljava/lang/String;)Lio/github/tracklens/ValidationConfig$Builder;
+	public final fun trackingPlanProvider (Lio/github/tracklens/TrackingPlanProvider;)Lio/github/tracklens/ValidationConfig$Builder;
+}
+
+public final class io/github/tracklens/ValidationConfig$Companion {
+}
+
+public final class io/github/tracklens/ValidationIssue {
+	public final fun getCode ()Ljava/lang/String;
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun getParamKey ()Ljava/lang/String;
+	public final fun getSeverity ()Lio/github/tracklens/Severity;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/tracklens/ValidationIssues {
+	public static final field INSTANCE Lio/github/tracklens/ValidationIssues;
+	public static final fun create (Ljava/lang/String;Lio/github/tracklens/Severity;Ljava/lang/String;)Lio/github/tracklens/ValidationIssue;
+	public static final fun create (Ljava/lang/String;Lio/github/tracklens/Severity;Ljava/lang/String;Ljava/lang/String;)Lio/github/tracklens/ValidationIssue;
+	public static synthetic fun create$default (Ljava/lang/String;Lio/github/tracklens/Severity;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/github/tracklens/ValidationIssue;
+}
+
+public abstract interface class io/github/tracklens/ValidationRule {
+	public abstract fun validate (Lio/github/tracklens/TrackedEvent;)Ljava/util/List;
 }
 

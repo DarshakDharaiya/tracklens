@@ -4,6 +4,7 @@ import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
@@ -35,6 +36,8 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             kotlin.compilerOptions {
                 languageVersion.set(consumerFloor)
                 apiVersion.set(consumerFloor)
+                // Interface default methods compile to real Java default methods, without DefaultImpls shims.
+                jvmDefault.set(JvmDefaultMode.NO_COMPATIBILITY)
             }
         }
     }
