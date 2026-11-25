@@ -211,7 +211,7 @@ Limits (any cut sets `truncated = true`): 3 nested container levels below the to
 
 `ParamNormalizer`, `NormalizedParams` and `UnknownValue` are `@InternalTrackLensApi` (public bytecode, excluded from the ABI dump), so the benchmark module can call them. Every library module compiles with `-opt-in=io.github.tracklens.InternalTrackLensApi`, set by the library convention.
 
-### Benchmark (vivo V2437, Android 16, 2026-11-25)
+### Benchmark (vivo V2437, Android 16, 2026-11-25; current numbers in [perf.md](perf.md))
 
 | Benchmark (`NormalizationBenchmark`) | Median | p99 (approx.) | Allocations |
 |---|---|---|---|
@@ -245,7 +245,7 @@ Targets: normalization ≤ 5 µs (Task 12) and `log()` p50 < 10 µs / p99 < 100 
 - With the consumer held back and a cap of 10,000: exactly 10,000 accepted and 390,000 counted as dropped (0.16 s).
 - The publish throttle, tested on virtual time: the first event publishes at once, the rest wait exactly 100 ms.
 
-**Benchmark** (vivo V2437, Android 16): a whole `TrackLens.log(name, 10 params)` call is now 2.05 µs median (target < 10 µs). In this tight loop some calls may take the cheaper over-cap drop path; Task 16 re-measures with drops reported.
+**Benchmark:** superseded by Task 16's drop-checked measurements in [perf.md](perf.md) (p50 0.92 µs, p99 4.6 µs per call).
 
 **Build fix:** `dependencyGuardBaseline` also declares the repository as its output, so the repository scans now run after both dependency-guard tasks.
 

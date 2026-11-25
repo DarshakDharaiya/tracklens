@@ -1,0 +1,692 @@
+{
+    "context": {
+        "build": {
+            "brand": "vivo",
+            "device": "V2437",
+            "fingerprint": "vivo/V2437i/V2437:16/BP2A.250605.031.A3_V000L1/compiler261014093954:user/release-keys",
+            "id": "BP2A.250605.031.A3_V000L1",
+            "model": "V2437",
+            "type": "user",
+            "version": {
+                "codename": "REL",
+                "sdk": 36
+            }
+        },
+        "cpuCoreCount": 8,
+        "cpuLocked": true,
+        "cpuMaxFreqHz": 2500000000,
+        "memTotalBytes": 5763231744,
+        "sustainedPerformanceModeEnabled": false,
+        "artMainlineVersion": 372042720,
+        "osCodenameAbbreviated": "REL",
+        "compilationMode": "speed",
+        "payload": {}
+    },
+    "benchmarks": [
+        {
+            "name": "logTenParamMapWhileDisabled",
+            "params": {},
+            "className": "io.github.tracklens.benchmark.LogOverheadBenchmark",
+            "totalRunTimeNs": 2395503692,
+            "metrics": {
+                "timeNs": {
+                    "minimum": 7.697982779827798,
+                    "maximum": 36.124514145141454,
+                    "median": 7.872072570725708,
+                    "coefficientOfVariation": 0.474422502207202,
+                    "runs": [
+                        36.124514145141454,
+                        13.584071340713407,
+                        7.856937269372693,
+                        8.332865928659286,
+                        7.697982779827798,
+                        7.943985239852399,
+                        7.891008610086101,
+                        7.98939729397294,
+                        7.977097170971709,
+                        8.095375153751538,
+                        7.763259532595326,
+                        7.774624846248463,
+                        7.845584255842558,
+                        7.8276137761377615,
+                        7.800172201722018,
+                        8.01590405904059,
+                        7.883431734317343,
+                        7.8758548585485855,
+                        7.868290282902829,
+                        7.882484624846248,
+                        7.887220172201722,
+                        7.819089790897909,
+                        8.019680196801968,
+                        7.768942189421894,
+                        7.8597785977859775,
+                        7.940209102091021,
+                        8.019680196801968,
+                        7.856937269372693,
+                        7.946826568265682,
+                        7.746236162361623,
+                        7.819089790897909,
+                        7.785977859778598,
+                        7.7396186961869615,
+                        7.8030012300123,
+                        8.079286592865929,
+                        7.751918819188192,
+                        7.7812423124231245,
+                        7.7396186961869615,
+                        7.762324723247232,
+                        7.884378843788438,
+                        7.973321033210332,
+                        7.743394833948339,
+                        7.903308733087331,
+                        7.8645141451414515,
+                        7.906137761377614,
+                        7.988462484624846,
+                        7.943038130381304,
+                        7.913714637146372,
+                        7.804907749077491,
+                        7.856949569495695
+                    ]
+                },
+                "allocationCount": {
+                    "minimum": 2.4600246002460025E-5,
+                    "maximum": 2.4600246002460025E-5,
+                    "median": 2.4600246002460025E-5,
+                    "coefficientOfVariation": 1.5398409016342412E-16,
+                    "runs": [
+                        2.4600246002460025E-5,
+                        2.4600246002460025E-5,
+                        2.4600246002460025E-5,
+                        2.4600246002460025E-5,
+                        2.4600246002460025E-5
+                    ]
+                }
+            },
+            "sampledMetrics": {},
+            "warmupIterations": 2033236,
+            "repeatIterations": 81300,
+            "thermalThrottleSleepSeconds": 0,
+            "profilerOutputs": [
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace",
+                    "filename": "LogOverheadBenchmark_logTenParamMapWhileDisabled_2026-11-25-10-13-48.perfetto-trace"
+                },
+                {
+                    "type": "MethodTrace",
+                    "label": "Method Trace",
+                    "filename": "LogOverheadBenchmark_logTenParamMapWhileDisabled-methodTracing-2026-11-25-10-13-48.trace"
+                }
+            ]
+        },
+        {
+            "name": "logTenParamBundle",
+            "params": {},
+            "className": "io.github.tracklens.benchmark.LogOverheadBenchmark",
+            "totalRunTimeNs": 11659984924,
+            "metrics": {
+                "timeNs": {
+                    "minimum": 1538.0,
+                    "maximum": 41846.0,
+                    "median": 1616.0,
+                    "coefficientOfVariation": 1.9824524942431752,
+                    "runs": [
+                        41846.0,
+                        5539.0,
+                        3615.0,
+                        2462.0,
+                        1847.0,
+                        1769.0,
+                        1616.0,
+                        6461.0,
+                        1923.0,
+                        1538.0,
+                        1539.0,
+                        1846.0,
+                        1538.0,
+                        1539.0,
+                        1538.0,
+                        1769.0,
+                        1539.0,
+                        1539.0,
+                        1769.0,
+                        1769.0,
+                        1539.0,
+                        1539.0,
+                        1538.0,
+                        1846.0,
+                        9923.0,
+                        3077.0,
+                        2538.0,
+                        2462.0,
+                        1616.0,
+                        1769.0,
+                        1538.0,
+                        1846.0,
+                        1616.0,
+                        1539.0,
+                        1538.0,
+                        1615.0,
+                        1539.0,
+                        1769.0,
+                        1615.0,
+                        2769.0,
+                        1770.0,
+                        1538.0,
+                        1538.0,
+                        1539.0,
+                        1539.0,
+                        1538.0,
+                        1770.0,
+                        1615.0,
+                        1538.0,
+                        1769.0
+                    ]
+                },
+                "allocationCount": {
+                    "minimum": 18.0,
+                    "maximum": 19.0,
+                    "median": 18.0,
+                    "coefficientOfVariation": 0.024572175576920766,
+                    "runs": [
+                        19.0,
+                        18.0,
+                        18.0,
+                        18.0,
+                        18.0
+                    ]
+                }
+            },
+            "sampledMetrics": {},
+            "warmupIterations": 45000,
+            "repeatIterations": 1,
+            "thermalThrottleSleepSeconds": 0,
+            "profilerOutputs": [
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace",
+                    "filename": "LogOverheadBenchmark_logTenParamBundle_2026-11-25-10-13-58.perfetto-trace"
+                },
+                {
+                    "type": "MethodTrace",
+                    "label": "Method Trace",
+                    "filename": "LogOverheadBenchmark_logTenParamBundle-methodTracing-2026-11-25-10-13-57.trace"
+                }
+            ]
+        },
+        {
+            "name": "logTenParamMap",
+            "params": {},
+            "className": "io.github.tracklens.benchmark.LogOverheadBenchmark",
+            "totalRunTimeNs": 11818542078,
+            "metrics": {
+                "timeNs": {
+                    "minimum": 1308.0,
+                    "maximum": 89538.0,
+                    "median": 1615.0,
+                    "coefficientOfVariation": 2.304021673596729,
+                    "runs": [
+                        89538.0,
+                        8000.0,
+                        3615.0,
+                        2154.0,
+                        1615.0,
+                        1539.0,
+                        1538.0,
+                        10077.0,
+                        1846.0,
+                        1538.0,
+                        1539.0,
+                        1538.0,
+                        1539.0,
+                        1308.0,
+                        58769.0,
+                        5231.0,
+                        2231.0,
+                        47616.0,
+                        4923.0,
+                        2846.0,
+                        1846.0,
+                        1538.0,
+                        6153.0,
+                        3385.0,
+                        8615.0,
+                        3384.0,
+                        3000.0,
+                        2154.0,
+                        1538.0,
+                        1539.0,
+                        29538.0,
+                        4616.0,
+                        2538.0,
+                        1615.0,
+                        1538.0,
+                        1462.0,
+                        1461.0,
+                        1539.0,
+                        1461.0,
+                        6077.0,
+                        2077.0,
+                        1538.0,
+                        1462.0,
+                        1461.0,
+                        1539.0,
+                        1461.0,
+                        1462.0,
+                        1461.0,
+                        1462.0,
+                        1461.0
+                    ]
+                },
+                "allocationCount": {
+                    "minimum": 18.0,
+                    "maximum": 101.0,
+                    "median": 18.0,
+                    "coefficientOfVariation": 1.063490179613815,
+                    "runs": [
+                        19.0,
+                        18.0,
+                        101.0,
+                        18.0,
+                        18.0
+                    ]
+                }
+            },
+            "sampledMetrics": {},
+            "warmupIterations": 45000,
+            "repeatIterations": 1,
+            "thermalThrottleSleepSeconds": 0,
+            "profilerOutputs": [
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace",
+                    "filename": "LogOverheadBenchmark_logTenParamMap_2026-11-25-10-14-09.perfetto-trace"
+                },
+                {
+                    "type": "MethodTrace",
+                    "label": "Method Trace",
+                    "filename": "LogOverheadBenchmark_logTenParamMap-methodTracing-2026-11-25-10-14-09.trace"
+                }
+            ]
+        },
+        {
+            "name": "logWithoutParams",
+            "params": {},
+            "className": "io.github.tracklens.benchmark.LogOverheadBenchmark",
+            "totalRunTimeNs": 17376850693,
+            "metrics": {
+                "timeNs": {
+                    "minimum": 404.8910440944446,
+                    "maximum": 474.5023666509813,
+                    "median": 427.21352797076975,
+                    "coefficientOfVariation": 0.04028337002955277,
+                    "runs": [
+                        426.41026102361116,
+                        447.7995059097074,
+                        414.0574570266006,
+                        450.1033575995793,
+                        410.7740678716749,
+                        434.35181443241896,
+                        439.4805339496775,
+                        411.4336576521715,
+                        455.3956666758934,
+                        408.01626207545604,
+                        425.1082639023445,
+                        437.65377695352504,
+                        413.5027680128436,
+                        452.0276801284358,
+                        411.0685290779749,
+                        440.4339690536164,
+                        410.4126415146566,
+                        418.07109640988733,
+                        444.0174592410109,
+                        407.7447338555651,
+                        458.26579151327263,
+                        417.97578680765076,
+                        426.94948376560467,
+                        451.281375425582,
+                        406.58108201622053,
+                        442.99060259639606,
+                        432.88742491765163,
+                        433.94188557034903,
+                        474.5023666509813,
+                        404.8910440944446,
+                        421.42941567248874,
+                        439.4256926952141,
+                        424.8079829490409,
+                        460.549478229579,
+                        410.6490159714341,
+                        423.33032081268857,
+                        447.07826556315223,
+                        405.7528787333573,
+                        434.02492595565644,
+                        427.4775721759349,
+                        411.86704542309076,
+                        448.1950272649265,
+                        410.1044717247488,
+                        433.2929941594929,
+                        428.8088548730866,
+                        413.81949096243807,
+                        438.41592160987625,
+                        410.74964707836244,
+                        440.0937871951726,
+                        418.07852852437236
+                    ]
+                },
+                "allocationCount": {
+                    "minimum": 3.1451822736457498,
+                    "maximum": 3.221413347357932,
+                    "median": 3.1559083234146206,
+                    "coefficientOfVariation": 0.01184892299839062,
+                    "runs": [
+                        3.148413928640629,
+                        3.21470783624436,
+                        3.221413347357932,
+                        3.1559083234146206,
+                        3.1451822736457498
+                    ]
+                }
+            },
+            "sampledMetrics": {},
+            "warmupIterations": 9023799,
+            "repeatIterations": 144508,
+            "thermalThrottleSleepSeconds": 0,
+            "profilerOutputs": [
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace",
+                    "filename": "LogOverheadBenchmark_logWithoutParams_2026-11-25-10-14-28.perfetto-trace"
+                },
+                {
+                    "type": "MethodTrace",
+                    "label": "Method Trace",
+                    "filename": "LogOverheadBenchmark_logWithoutParams-methodTracing-2026-11-25-10-14-27.trace"
+                }
+            ]
+        },
+        {
+            "name": "wrappedLogEventTenParams",
+            "params": {},
+            "className": "io.github.tracklens.benchmark.LogOverheadBenchmark",
+            "totalRunTimeNs": 12072648539,
+            "metrics": {
+                "timeNs": {
+                    "minimum": 1538.0,
+                    "maximum": 46461.0,
+                    "median": 1539.0,
+                    "coefficientOfVariation": 2.158874513489665,
+                    "runs": [
+                        46461.0,
+                        5615.0,
+                        2230.0,
+                        2154.0,
+                        2077.0,
+                        1846.0,
+                        1538.0,
+                        1616.0,
+                        1769.0,
+                        1615.0,
+                        1539.0,
+                        1539.0,
+                        1538.0,
+                        1539.0,
+                        1539.0,
+                        1615.0,
+                        1539.0,
+                        1539.0,
+                        1538.0,
+                        11769.0,
+                        2231.0,
+                        1847.0,
+                        1615.0,
+                        1538.0,
+                        11462.0,
+                        2769.0,
+                        2385.0,
+                        2077.0,
+                        1769.0,
+                        1538.0,
+                        1539.0,
+                        1538.0,
+                        1538.0,
+                        1539.0,
+                        1538.0,
+                        1539.0,
+                        1539.0,
+                        1538.0,
+                        1538.0,
+                        1539.0,
+                        1538.0,
+                        1538.0,
+                        1539.0,
+                        1538.0,
+                        1539.0,
+                        1539.0,
+                        1538.0,
+                        1539.0,
+                        1538.0,
+                        1538.0
+                    ]
+                },
+                "allocationCount": {
+                    "minimum": 18.0,
+                    "maximum": 19.0,
+                    "median": 18.0,
+                    "coefficientOfVariation": 0.024572175576920766,
+                    "runs": [
+                        19.0,
+                        18.0,
+                        18.0,
+                        18.0,
+                        18.0
+                    ]
+                }
+            },
+            "sampledMetrics": {},
+            "warmupIterations": 45000,
+            "repeatIterations": 1,
+            "thermalThrottleSleepSeconds": 0,
+            "profilerOutputs": [
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace",
+                    "filename": "LogOverheadBenchmark_wrappedLogEventTenParams_2026-11-25-10-14-39.perfetto-trace"
+                },
+                {
+                    "type": "MethodTrace",
+                    "label": "Method Trace",
+                    "filename": "LogOverheadBenchmark_wrappedLogEventTenParams-methodTracing-2026-11-25-10-14-39.trace"
+                }
+            ]
+        },
+        {
+            "name": "normalizeTenParamMap",
+            "params": {},
+            "className": "io.github.tracklens.benchmark.NormalizationBenchmark",
+            "totalRunTimeNs": 11664000232,
+            "metrics": {
+                "timeNs": {
+                    "minimum": 626.1727642276422,
+                    "maximum": 2162.1341463414633,
+                    "median": 748.5132113821139,
+                    "coefficientOfVariation": 0.44702524269399974,
+                    "runs": [
+                        1037.0548780487804,
+                        941.0569105691056,
+                        642.2764227642276,
+                        634.6138211382114,
+                        639.7743902439024,
+                        634.7723577235772,
+                        637.2743902439024,
+                        626.1727642276422,
+                        636.6483739837398,
+                        640.8678861788618,
+                        811.7581300813008,
+                        647.2784552845528,
+                        652.9085365853658,
+                        740.4613821138212,
+                        1845.060975609756,
+                        1226.8597560975609,
+                        2148.217479674797,
+                        2162.1341463414633,
+                        1069.5752032520325,
+                        1900.5630081300812,
+                        1161.35162601626,
+                        756.5650406504066,
+                        650.4065040650406,
+                        648.6869918699186,
+                        768.6056910569106,
+                        647.9044715447154,
+                        654.1585365853658,
+                        652.1260162601626,
+                        650.4065040650406,
+                        724.8272357723578,
+                        758.599593495935,
+                        1504.8475609756097,
+                        1045.6544715447155,
+                        1194.0284552845528,
+                        1029.2357723577236,
+                        1113.6646341463415,
+                        1279.7073170731708,
+                        723.1077235772358,
+                        987.4918699186992,
+                        726.0772357723578,
+                        663.3841463414634,
+                        673.5467479674796,
+                        778.609756097561,
+                        658.5365853658536,
+                        711.6930894308944,
+                        731.7073170731708,
+                        1973.1077235772357,
+                        1615.3841463414635,
+                        1221.388211382114,
+                        1191.9939024390244
+                    ]
+                },
+                "allocationCount": {
+                    "minimum": 15.004065040650406,
+                    "maximum": 15.004065040650406,
+                    "median": 15.004065040650406,
+                    "coefficientOfVariation": 0.0,
+                    "runs": [
+                        15.004065040650406,
+                        15.004065040650406,
+                        15.004065040650406,
+                        15.004065040650406,
+                        15.004065040650406
+                    ]
+                }
+            },
+            "sampledMetrics": {},
+            "warmupIterations": 7517397,
+            "repeatIterations": 492,
+            "thermalThrottleSleepSeconds": 0,
+            "profilerOutputs": [
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace",
+                    "filename": "NormalizationBenchmark_normalizeTenParamMap_2026-11-25-10-14-53.perfetto-trace"
+                },
+                {
+                    "type": "MethodTrace",
+                    "label": "Method Trace",
+                    "filename": "NormalizationBenchmark_normalizeTenParamMap-methodTracing-2026-11-25-10-14-53.trace"
+                }
+            ]
+        },
+        {
+            "name": "normalizeTenParamBundle",
+            "params": {},
+            "className": "io.github.tracklens.benchmark.NormalizationBenchmark",
+            "totalRunTimeNs": 13664384078,
+            "metrics": {
+                "timeNs": {
+                    "minimum": 1473.4302638664512,
+                    "maximum": 1700.9916639741518,
+                    "median": 1551.438632202477,
+                    "coefficientOfVariation": 0.034094473434401876,
+                    "runs": [
+                        1560.0662789445341,
+                        1668.8670759289175,
+                        1559.4846957458267,
+                        1700.9916639741518,
+                        1581.0182014001077,
+                        1473.4302638664512,
+                        1506.0966720516963,
+                        1686.7950673128703,
+                        1613.7840172320948,
+                        1580.8607646742057,
+                        1492.599310716209,
+                        1654.6191060850836,
+                        1584.04704361874,
+                        1580.7481098546043,
+                        1549.2978782983307,
+                        1591.4170813139472,
+                        1575.1377275175014,
+                        1590.762606354335,
+                        1527.587097469036,
+                        1610.1089283791061,
+                        1656.7399892299409,
+                        1502.3006354334948,
+                        1569.4378675282715,
+                        1550.716208939149,
+                        1539.4109639203016,
+                        1588.4130748519117,
+                        1518.8301992460958,
+                        1552.161055465805,
+                        1522.3760473882605,
+                        1547.6343134087238,
+                        1510.2025417339796,
+                        1519.1069036079698,
+                        1564.641055465805,
+                        1546.7014754981153,
+                        1494.7516639741518,
+                        1546.0353688745288,
+                        1510.7245018847605,
+                        1517.7449219170705,
+                        1606.6691437802908,
+                        1514.8949919224556,
+                        1636.020053850296,
+                        1512.4361012385568,
+                        1546.361787829833,
+                        1564.7073344103392,
+                        1577.7556919763058,
+                        1498.5493591814754,
+                        1527.6119332256328,
+                        1605.7064728056005,
+                        1527.3534733441033,
+                        1486.9640926225095
+                    ]
+                },
+                "allocationCount": {
+                    "minimum": 14.999913839526117,
+                    "maximum": 15.000646203554119,
+                    "median": 15.000280021540119,
+                    "coefficientOfVariation": 1.7380710806192612E-5,
+                    "runs": [
+                        15.000236941303177,
+                        15.000646203554119,
+                        15.00032310177706,
+                        15.000280021540119,
+                        14.999913839526117
+                    ]
+                }
+            },
+            "sampledMetrics": {},
+            "warmupIterations": 4027996,
+            "repeatIterations": 46425,
+            "thermalThrottleSleepSeconds": 0,
+            "profilerOutputs": [
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace",
+                    "filename": "NormalizationBenchmark_normalizeTenParamBundle_2026-11-25-10-15-06.perfetto-trace"
+                },
+                {
+                    "type": "MethodTrace",
+                    "label": "Method Trace",
+                    "filename": "NormalizationBenchmark_normalizeTenParamBundle-methodTracing-2026-11-25-10-15-06.trace"
+                }
+            ]
+        }
+    ]
+}

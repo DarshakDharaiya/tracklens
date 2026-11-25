@@ -79,4 +79,41 @@ class PipelineIntegrationTest {
                 .map { it.name },
         )
     }
+
+    /**
+     * Task 15: one wrap() call, two views. The SDK gets the caller's own map with the real values; TrackLens keeps
+     * only the redacted copy.
+     */
+    @Test
+    fun wrapForwardsOriginalValuesWhileTrackLensKeepsRedactedOnes() {
+        TrackLens.addListener({ received += it }, Executor { it.run() })
+        TrackLens.install(app)
+        val sdkEvents = mutableListOf<Map<String, Any?>>()
+        val sdkUserIds = mutableListOf<String?>()
+        val sdk =
+            object : io.github.tracklens.AnalyticsDelegate {
+                override fun logEvent(
+                    name: String,
+                    params: Map<String, Any?>,
+                ) {
+                    sdkEvents += params
+                }
+
+                override fun setUserId(userId: String?) {
+                    sdkUserIds += userId
+                }
+            }
+        val params = mapOf("email" to "jane@example.com", "plan" to "pro")
+
+        val analytics = TrackLens.wrap(source = "firebase", delegate = sdk)
+        analytics.logEvent("sign_up", params)
+        analytics.setUserId("user-42")
+        assertTrue(requireNotNull(TrackLensImpl.pipeline).awaitIdle())
+
+        assertTrue("the SDK gets the caller's own map", sdkEvents.single() === params)
+        assertEquals(listOf("user-42"), sdkUserIds)
+        assertEquals(mapOf("email" to "[REDACTED]", "plan" to "pro"), received[0].params)
+        assertEquals(mapOf("user_id" to Redactor.hash("user-42")), received[1].params)
+        assertEquals(listOf("firebase", "firebase"), received.map { it.source })
+    }
 }

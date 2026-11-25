@@ -1,0 +1,13 @@
+{
+  "benchmark": "TrackLens.log(name, 10-param Map), per call",
+  "device": "vivo V2437",
+  "sdkInt": 36,
+  "calls": 200000,
+  "warmupCalls": 50000,
+  "p50Ns": 923,
+  "p90Ns": 1462,
+  "p99Ns": 4616,
+  "p999Ns": 35154,
+  "maxNs": 2444000,
+  "droppedEvents": 0
+}
