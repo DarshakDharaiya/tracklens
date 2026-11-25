@@ -21,6 +21,13 @@ class AndroidComposeConventionPlugin : Plugin<Project> {
                 // A library must not merge the test manifest's activity into host debug builds,
                 // so it goes on the instrumented-test classpath only.
                 dependencies { "androidTestImplementation"(libs.library("androidx-compose-ui-test-manifest")) }
+                // Screenshot tests of library UI on Robolectric: recordRoborazziDebug / verifyRoborazziDebug.
+                pluginManager.apply("io.github.takahirom.roborazzi")
+                dependencies {
+                    "testImplementation"(libs.library("roborazzi"))
+                    "testImplementation"(libs.library("robolectric"))
+                    "testImplementation"(libs.library("androidx-test-core"))
+                }
             }
             pluginManager.withPlugin("com.android.application") {
                 extensions.configure<ApplicationExtension> { buildFeatures.compose = true }

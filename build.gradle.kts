@@ -11,4 +11,5 @@ plugins {
     alias(libs.plugins.spotless) apply false
     alias(libs.plugins.detekt) apply false
     alias(libs.plugins.dependency.guard) apply false
+    alias(libs.plugins.roborazzi) apply false
 }

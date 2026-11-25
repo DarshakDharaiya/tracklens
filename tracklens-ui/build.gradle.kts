@@ -5,10 +5,13 @@ plugins {
 
 android {
     namespace = "io.github.tracklens.ui"
+    // Library resources share the host app's namespace; the prefix keeps them from colliding.
+    resourcePrefix = "tracklens_"
 }
 
 dependencies {
     implementation(project(":tracklens-core"))
     implementation(project(":tracklens-storage"))
     implementation(project(":tracklens-validation"))
+    implementation(libs.androidx.core)
 }

@@ -46,9 +46,9 @@ androidx.compose.ui:ui-util:1.12.1
 androidx.compose.ui:ui:1.12.1
 androidx.compose:compose-bom:2026.09.00
 androidx.concurrent:concurrent-futures:1.1.0
-androidx.core:core-ktx:1.16.0
+androidx.core:core-ktx:1.18.0
 androidx.core:core-viewtree:1.0.0
-androidx.core:core:1.16.0
+androidx.core:core:1.18.0
 androidx.customview:customview-poolingcontainer:1.0.0
 androidx.emoji2:emoji2:1.4.0
 androidx.graphics:graphics-path:1.0.1

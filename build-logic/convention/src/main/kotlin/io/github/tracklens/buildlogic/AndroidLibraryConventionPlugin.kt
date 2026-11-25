@@ -4,6 +4,7 @@ import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.dependencies
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
@@ -26,7 +27,10 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                 defaultConfig.aarMetadata.minCompileSdk = libs.intVersionOf("android-libraryMinCompileSdk")
                 // Library code ships to other apps: no lint warning is acceptable.
                 lint.warningsAsErrors = true
+                // Instrumented library tests (androidTest) run with the AndroidX runner.
+                defaultConfig.testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
             }
+            dependencies { "androidTestImplementation"(libs.library("androidx-test-runner")) }
 
             // AGP 9 built-in Kotlin registers the `kotlin` extension when the Android plugin is applied.
             val kotlin = extensions.getByName("kotlin") as KotlinAndroidExtension

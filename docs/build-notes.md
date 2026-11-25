@@ -268,6 +268,32 @@ Targets: normalization ≤ 5 µs (Task 12) and `log()` p50 < 10 µs / p99 < 100 
 
 **Note:** Python string escapes once turned `\b` into backspace characters in a regex. Write regex-bearing code with the file writer, not through Python string literals.
 
+## Floating bubble (Task 17)
+
+`BubbleView` (`tracklens-ui/.../ui/overlay/`) is a plain custom `View`, so it can sit in any host activity's window, Compose or not. Placement rules live in `BubblePositioner`, which uses no Android types.
+
+- **Look:** teal circle (`#00695C`) with a white lens icon, about 6:1 contrast. The red badge (`#C62828`) with white text is about 5.6:1 and shows the unread count, "99+" above 99, hidden at 0. Size is 56 dp (touch target ≥ 48 dp), with an 8 dp margin and 6 dp elevation.
+- **Drag:** starts after the system touch slop; anything shorter is a tap. On release it snaps to the nearer edge with a 200 ms animation, skipped when reduced motion or the system animation scale is 0. The stored position is `(edge, yFraction)`, so it survives rotation and resizes. `START`/`END` follow layout direction.
+- **Insets:** stays inside system bars and display cutouts. **Device finding:** an overlay added to the decor view *after* the window dispatched its insets never receives them. Robolectric didn't show this; on the phone the bubble sat under the status bar. The bubble now re-requests insets on attach and falls back to the window's root insets until a dispatch arrives. Before Android 11 it takes the larger of the dispatched and root insets, because a sibling can consume them first.
+- **Accessibility:** announced as a button with its count ("TrackLens, 12 unread events"). Custom actions: Open TrackLens, Move bubble to the other side, Hide TrackLens bubble.
+- **Resources:** `tracklens-ui` uses `resourcePrefix = "tracklens_"` so library resources can't collide with the host's.
+- **Left for Task 18:** attaching to activities, persisting the position, and drag-to-dismiss, which needs a visible drop target owned by the overlay.
+
+**Tests:**
+- 9 positioner tests (JVM).
+- 8 Robolectric `BubbleView` tests: badge, spoken text, button role and size, tap, TalkBack move and hide, margins, insets.
+- 3 Roborazzi screenshots: `bubble_unread_0/7/99_plus`, stored in `tracklens-ui/src/test/screenshots/`, verified by `verifyRoborazziDebug` in CI.
+- 4 instrumented tests on the phone with real touch injection (`Instrumentation.sendPointerSync`): drag across snaps to the other edge; a sub-slop move is a tap; the bubble never overlaps the device's real bars even when dragged past the top or bottom; arbitrary insets are respected.
+
+**Build additions:**
+- Library modules now set `AndroidJUnitRunner` and depend on `androidx.test:runner` for `androidTest`.
+- The Compose convention applies Roborazzi (with Robolectric and `androidx.test:core`) to library modules.
+- `tracklens-ui` declares `androidx.core` (1.18.0, the policy line). Its baseline and the umbrella's moved from the 1.16.0 that Compose pulled in transitively.
+
+**Screenshot baselines** were recorded on Windows. If Linux CI renders the badge text differently, re-record them from CI's actual images (uploaded with `unit-test-reports` on failure). The plan prefers Linux-recorded baselines.
+
+**Instrumented tests:** `./gradlew :tracklens-ui:connectedDebugAndroidTest` with a device connected. The test activity briefly appears on screen.
+
 ## Environment quirks (local machine)
 
 - **Expected warning:** Gradle on JDK 25 prints `sun.misc.Unsafe` warnings from its bundled protobuf. They are harmless.

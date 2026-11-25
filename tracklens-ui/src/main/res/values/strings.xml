@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Bubble: spoken by TalkBack. -->
+    <string name="tracklens_bubble_description">TrackLens</string>
+    <plurals name="tracklens_bubble_description_unread">
+        <item quantity="one">TrackLens, %d unread event</item>
+        <item quantity="other">TrackLens, %d unread events</item>
+    </plurals>
+    <string name="tracklens_action_open">Open TrackLens</string>
+    <string name="tracklens_action_hide">Hide TrackLens bubble</string>
+    <string name="tracklens_action_move">Move bubble to the other side</string>
+</resources>
