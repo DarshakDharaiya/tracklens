@@ -38,6 +38,8 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                 apiVersion.set(consumerFloor)
                 // Interface default methods compile to real Java default methods, without DefaultImpls shims.
                 jvmDefault.set(JvmDefaultMode.NO_COMPATIBILITY)
+                // TrackLens modules share @InternalTrackLensApi declarations (Kotlin requires the opt-in even in the declaring module).
+                optIn.add(INTERNAL_API_ANNOTATION)
             }
         }
     }

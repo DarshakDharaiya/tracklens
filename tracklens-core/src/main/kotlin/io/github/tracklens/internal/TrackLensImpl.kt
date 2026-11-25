@@ -6,6 +6,7 @@ import android.os.Bundle
 import io.github.tracklens.CompletionCallback
 import io.github.tracklens.ExportCallback
 import io.github.tracklens.ExportFormat
+import io.github.tracklens.InternalTrackLensApi
 import io.github.tracklens.Subscription
 import io.github.tracklens.TrackLensConfig
 import io.github.tracklens.TrackLensListener
@@ -14,9 +15,11 @@ import java.util.concurrent.Executor
 /**
  * Implementation behind the [io.github.tracklens.TrackLens] facade, which wraps every call in [guard].
  *
- * Logging calls pass the kill switch, then go to [eventSink] through [pipelineBreaker]. Sessions (Task 25), UI
+ * Logging calls pass the kill switch, then are normalized ([ParamNormalizer]) and handed to [eventSink], both
+ * inside [pipelineBreaker]. Sessions (Task 25), UI
  * (Tasks 17-20) and export (Tasks 44-45) replace the remaining stub bodies.
  */
+@OptIn(InternalTrackLensApi::class)
 @Suppress("UnusedParameter", "TooManyFunctions") // One function per facade call; parameters are used once implemented.
 internal object TrackLensImpl {
     @Volatile
@@ -69,13 +72,13 @@ internal object TrackLensImpl {
         name: String,
         params: Map<String, Any?>,
         source: String?,
-    ) = record { it.log(name, params, source) }
+    ) = record { it.event(name, ParamNormalizer.normalize(params), source) }
 
     fun log(
         name: String,
         params: Bundle,
         source: String?,
-    ) = record { it.log(name, params, source) }
+    ) = record { it.event(name, ParamNormalizer.normalize(params), source) }
 
     fun setUserProperty(
         name: String,

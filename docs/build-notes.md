@@ -195,6 +195,34 @@ Code lives in `tracklens-core/src/main/kotlin/io/github/tracklens/internal/`.
 
 **Testing note:** the `TrackLens` facade is a process-wide singleton, so core tests call `TrackLensImpl.resetForTests()` before and after each test.
 
+## Parameter normalization (Task 12)
+
+`ParamNormalizer` (`tracklens-core/.../internal/ParamNormalizer.kt`) turns the `Map` or `Bundle` passed to `log()` into an immutable `NormalizedParams` snapshot on the caller's thread. The app can mutate or reuse its objects afterwards. It runs inside the pipeline breaker and hands the result to `EventSink.event(...)`.
+
+| Input | Stored as |
+|---|---|
+| `String`, `Int`, `Long`, `Double`, `Float`, `Boolean`, `Short`, `Byte`, `Char`, `BigDecimal`, `BigInteger`, `null` | Itself; the type is kept because validation needs `Int` vs `Long` |
+| Other `CharSequence` (e.g. `StringBuilder`) | `String` |
+| `Bundle`, `Map` | `Map<String, *>` (non-string keys become text) |
+| Arrays (primitive and object), `Collection`s, `ArrayList`s from `Bundle` | `List` |
+| Anything else (enums, `Parcelable`s, `Serializable`s, `Size`, `SparseArray`, `AtomicInteger`, …) | `UnknownValue(className, text)`; text is `toString()`, or a note if it threw |
+
+Limits (any cut sets `truncated = true`): 3 nested container levels below the top level (deeper → `"<nested too deep>"`, which also ends self-referencing structures), 100 top-level params, 250 elements per list or nested map, 1,024 characters per string, key or text. The limits sit above Firebase's (25 params, 200 `items`, 100/1,000 characters) so validation can still flag violations. A map changed by another thread mid-copy is retried up to 3 times, then recorded without params plus a diagnostic.
+
+`ParamNormalizer`, `NormalizedParams` and `UnknownValue` are `@InternalTrackLensApi` (public bytecode, excluded from the ABI dump), so the benchmark module can call them. Every library module compiles with `-opt-in=io.github.tracklens.InternalTrackLensApi`, set by the library convention.
+
+### Benchmark (vivo V2437, Android 16, 2026-11-25)
+
+| Benchmark (`NormalizationBenchmark`) | Median | p99 (approx.) | Allocations |
+|---|---|---|---|
+| `normalizeTenParamMap` | 0.71 µs | 1.25 µs | 15 |
+| `normalizeTenParamBundle` | 1.54 µs | 1.67 µs | 15 |
+| `logTenParamsThroughTheFacade` (guard + kill switch + normalize + empty sink) | 0.86 µs | 1.27 µs | 15 |
+
+Targets: normalization ≤ 5 µs (Task 12) and `log()` p50 < 10 µs / p99 < 100 µs (Task 16 re-measures with the pipeline).
+
+**Running benchmarks:** `./gradlew :benchmark:connectedAndroidTest` with a device connected and unlocked. Results: `benchmark/build/outputs/connected_android_test_additional_output/releaseAndroidTest/connected/<device>/*benchmarkData.json`. **Leave the phone alone while it runs:** androidx.benchmark measures only while its `IsolationActivity` is in front. When the phone went back to its home screen mid-run, the run stalled for 20+ minutes without failing; force-stopping `io.github.tracklens.benchmark.test` and re-running fixed it.
+
 ## Environment quirks (local machine)
 
 - **Expected warning:** Gradle on JDK 25 prints `sun.misc.Unsafe` warnings from its bundled protobuf. They are harmless.

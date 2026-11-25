@@ -1,21 +1,14 @@
 package io.github.tracklens.internal
 
-import android.os.Bundle
-
 /**
- * Receives the logging calls that pass the kill switch. Task 13 replaces [NONE] with the event pipeline; tests
- * replace it to inject failures. Calls arrive through the pipeline's [CircuitBreaker].
+ * Receives the logging calls that pass the kill switch, with parameters already normalized on the caller's thread.
+ * Task 13 replaces [NONE] with the event pipeline; tests replace it to inject failures. Calls arrive through the
+ * pipeline's [CircuitBreaker].
  */
 internal interface EventSink {
-    fun log(
+    fun event(
         name: String,
-        params: Map<String, Any?>,
-        source: String?,
-    )
-
-    fun log(
-        name: String,
-        params: Bundle,
+        params: NormalizedParams,
         source: String?,
     )
 
@@ -37,15 +30,9 @@ internal interface EventSink {
 
     /** Accepts and drops everything, until the pipeline exists. */
     object NONE : EventSink {
-        override fun log(
+        override fun event(
             name: String,
-            params: Map<String, Any?>,
-            source: String?,
-        ) = Unit
-
-        override fun log(
-            name: String,
-            params: Bundle,
+            params: NormalizedParams,
             source: String?,
         ) = Unit
 

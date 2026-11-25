@@ -131,15 +131,9 @@ class FaultInjectionTest {
             throw failure
         }
 
-        override fun log(
+        override fun event(
             name: String,
-            params: Map<String, Any?>,
-            source: String?,
-        ) = fail()
-
-        override fun log(
-            name: String,
-            params: Bundle,
+            params: NormalizedParams,
             source: String?,
         ) = fail()
 
