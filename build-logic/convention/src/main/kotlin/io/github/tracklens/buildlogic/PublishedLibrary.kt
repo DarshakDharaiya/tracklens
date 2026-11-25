@@ -101,6 +101,12 @@ private fun Project.configureApiDump(): Any {
             nonPublicMarkers.add(INTERNAL_API_ANNOTATION)
             ignoredPackages.add(INTERNAL_PACKAGE)
             outputApiFile.set(layout.buildDirectory.file("api/$dumpFileName"))
+            // The Compose compiler emits a public `ComposableSingletons$<File>Kt` holder per file, whose getters
+            // are module-internal and named after a hash of the lambda. It is not API, and would churn the dump.
+            doLast {
+                val dump = outputApiFile.get().asFile
+                dump.writeText(stripComposableSingletons(dump.readText()))
+            }
         }
     val apiCheck =
         tasks.register<KotlinApiCompareTask>("apiCheck") {
@@ -117,3 +123,9 @@ private fun Project.configureApiDump(): Any {
     }
     return apiCheck
 }
+
+private val COMPOSABLE_SINGLETONS_BLOCK =
+    Regex("""(?m)^public final class \S+/ComposableSingletons\$\S+ \{\r?\n(?:.*\r?\n)*?\}\r?\n(?:\r?\n)?""")
+
+/** Removes the Compose compiler's `ComposableSingletons` classes from an ABI dump. */
+internal fun stripComposableSingletons(dump: String): String = dump.replace(COMPOSABLE_SINGLETONS_BLOCK, "")

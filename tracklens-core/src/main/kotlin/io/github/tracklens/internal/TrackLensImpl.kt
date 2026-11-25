@@ -10,6 +10,7 @@ import io.github.tracklens.InternalTrackLensApi
 import io.github.tracklens.Subscription
 import io.github.tracklens.TrackLensConfig
 import io.github.tracklens.TrackLensListener
+import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.concurrent.Executor
 
 /**
@@ -48,6 +49,9 @@ internal object TrackLensImpl {
     /** Registered `TrackLens.addListener` listeners; kept across installs so early registrations still work. */
     val listeners = ListenerRegistry(MainThreadExecutor)
 
+    /** `TrackLens.showBubble` / `hideBubble`; the overlay in tracklens-ui observes it. */
+    val bubbleVisibility = MutableStateFlow(true)
+
     /** The running pipeline once [install] accepted this process; also the default [eventSink]. */
     @Volatile
     var pipeline: EventPipeline? = null
@@ -83,6 +87,7 @@ internal object TrackLensImpl {
                 ).also { it.start() }
             pipeline = started
             eventSink = started
+            ModuleLoader.installAll(application, RuntimeImpl(config, started, bubbleVisibility))
         }
         isActive = decision == InstallDecision.ACTIVE
         val level = if (isActive) DiagnosticLevel.INFO else DiagnosticLevel.WARNING
@@ -130,9 +135,13 @@ internal object TrackLensImpl {
 
     fun openPanel(context: Context) = Unit
 
-    fun showBubble() = Unit
+    fun showBubble() {
+        bubbleVisibility.value = true
+    }
 
-    fun hideBubble() = Unit
+    fun hideBubble() {
+        bubbleVisibility.value = false
+    }
 
     fun clearAllData(callback: CompletionCallback?) {
         callback?.onComplete(true)
@@ -169,6 +178,7 @@ internal object TrackLensImpl {
             pipeline?.close()
             pipeline = null
             listeners.clear()
+            bubbleVisibility.value = true
             pipelineBreaker.reset()
         }
         Diagnostics.clear()

@@ -7,6 +7,7 @@ android {
     namespace = "io.github.tracklens.ui"
     // Library resources share the host app's namespace; the prefix keeps them from colliding.
     resourcePrefix = "tracklens_"
+    defaultConfig.consumerProguardFiles("consumer-rules.pro")
 }
 
 dependencies {
@@ -14,4 +15,5 @@ dependencies {
     implementation(project(":tracklens-storage"))
     implementation(project(":tracklens-validation"))
     implementation(libs.androidx.core)
+    implementation(libs.kotlinx.coroutines.android)
 }

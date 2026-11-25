@@ -294,6 +294,46 @@ Targets: normalization ≤ 5 µs (Task 12) and `log()` p50 < 10 µs / p99 < 100 
 
 **Instrumented tests:** `./gradlew :tracklens-ui:connectedDebugAndroidTest` with a device connected. The test activity briefly appears on screen.
 
+## Overlay attacher (Task 18)
+
+**How tracklens-ui plugs in:** core never depends on the UI. `TrackLens.install` loads every `TrackLensModule` with `ServiceLoader`. tracklens-ui registers `UiModule` in `META-INF/services/io.github.tracklens.internal.spi.TrackLensModule`, and its consumer R8 rule keeps the class and its constructor. Each module gets a `TrackLensRuntime`: the config, the live snapshot, bubble visibility, mark-as-read, open-panel and failure reporting. A module that throws is reported in diagnostics and skipped. `TrackedEvents.create` (`@InternalTrackLensApi`) builds events for previews and tests in other modules.
+
+**`OverlayAttacher`** (`Application.ActivityLifecycleCallbacks`, main thread only):
+- **Attach and detach:** adds the bubble to the resumed activity's decor view and removes it on pause, so exactly one bubble exists at a time.
+- **Where it doesn't show:**
+  - activities in `BubbleConfig.excludedActivities`;
+  - TrackLens' own screens, marked with `NoBubbleScreen` (a package-prefix check would also have hidden it in the sample app);
+  - `OverlayMode.NONE`;
+  - while hidden with `TrackLens.hideBubble()`.
+- **Position:** saved in the `tracklens_overlay` SharedPreferences as `(edge, yFraction)`, so it carries across activities, rotation and restarts.
+- **Badge:** follows `LiveSnapshot.unreadCount`. Opening the mini panel marks everything read.
+- **Drag to dismiss:** while dragging, a 64 dp "×" target appears at bottom center, above the navigation bar. It turns red when the bubble is over it, and a drop there hides the bubble.
+- **Mini panel** (Compose): the last 5 events (newest first, ⚠ on events with issues), the total, Pause/Resume (freezes the list), and "Open TrackLens". That button is a no-op until Task 19 adds `TrackLensActivity`. The panel sits beside the bubble: below it in the upper half of the screen, above it in the lower half.
+- **Failures:** every callback is guarded. After 5 failures the overlay removes itself and reports why; the host app and logging carry on.
+
+**Finding: a `ComposeView` in a plain `Activity`.** Compose's default recomposer belongs to the window. It is created from the lifecycle owner of the window's root view, here the decor view, not from the `ComposeView`. A plain `Activity` has no owner there, so the first mini panel crashed with "ViewTreeLifecycleOwner not found". `OverlayViewTreeOwner` now gives each overlay view its own lifecycle, saved-state registry and `Recomposer` (`setParentCompositionContext`), and cancels them when the panel closes. This also keeps TrackLens' UI independent of the host's lifecycle in a `ComponentActivity`.
+
+**Deferred to Task 19:** the launcher shortcut (it needs `TrackLensActivity`) and a working "Open TrackLens".
+
+**Tests:**
+- 10 Robolectric attacher tests:
+  - the bubble moves to the resumed activity;
+  - excluded activities, own screens and `NONE` mode get no bubble;
+  - the badge follows unread events;
+  - a tap opens and closes the mini panel and marks events read;
+  - hide and show;
+  - a drop on the target hides the bubble, a drop elsewhere doesn't;
+  - the position carries across activities;
+  - 5 failures turn the overlay off;
+  - `ServiceLoader` finds `UiModule`.
+- 3 Roborazzi screenshots: `mini_panel_events/paused/empty`. The panel is hosted in a plain `Activity` with `WRAP_CONTENT`, as in production.
+- 2 instrumented tests on the phone through the real `TrackLens.install` (so ServiceLoader runs on the device too):
+  - the bubble follows across three activities and a rotation to landscape, keeping the position it was dragged to;
+  - hide and show.
+  - The test activities are declared in `src/androidTest/AndroidManifest.xml`, which ships only in the test APK.
+
+**Build additions:** tracklens-ui depends on `kotlinx-coroutines-android` (1.10.2, the policy line) and ships `consumer-rules.pro`. tracklens-core exposes `kotlinx-coroutines-core` as `api`, because `TrackLensRuntime` uses `StateFlow`. The ABI dump (`apiBuild`) now drops the Compose compiler's `ComposableSingletons$<File>Kt` classes. They are public in bytecode but not API: their getters are module-internal and named after lambda hashes, so the dump would change on every UI edit.
+
 ## Environment quirks (local machine)
 
 - **Expected warning:** Gradle on JDK 25 prints `sun.misc.Unsafe` warnings from its bundled protobuf. They are harmless.

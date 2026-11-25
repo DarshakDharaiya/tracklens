@@ -52,26 +52,6 @@ internal sealed interface PipelineMessage {
     ) : PipelineMessage
 }
 
-/**
- * What the live view shows: the newest events (oldest first) plus counters. Published by the pipeline at most
- * every [EventPipeline.PUBLISH_INTERVAL_MILLIS].
- */
-internal class LiveSnapshot(
-    val events: List<TrackedEvent>,
-    /** Events processed since install (including those no longer in [events]). */
-    val totalEvents: Long,
-    /** Logging calls dropped because the queue was over its cap. */
-    val droppedEvents: Long,
-    /** Events since the live view was last visible. */
-    val unreadCount: Int,
-    /** Increases with every publication. */
-    val version: Long,
-) {
-    companion object {
-        val EMPTY = LiveSnapshot(emptyList(), totalEvents = 0, droppedEvents = 0, unreadCount = 0, version = 0)
-    }
-}
-
 /** Fixed-capacity buffer of the newest events. Pipeline-thread only. */
 internal class EventRingBuffer(
     val capacity: Int,

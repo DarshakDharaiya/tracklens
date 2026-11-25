@@ -9,4 +9,18 @@
     <string name="tracklens_action_open">Open TrackLens</string>
     <string name="tracklens_action_hide">Hide TrackLens bubble</string>
     <string name="tracklens_action_move">Move bubble to the other side</string>
+    <string name="tracklens_dismiss_target">Drop here to hide the TrackLens bubble</string>
+
+    <!-- Mini panel shown when the bubble is tapped. -->
+    <string name="tracklens_mini_panel_title">TrackLens</string>
+    <plurals name="tracklens_mini_panel_total">
+        <item quantity="one">%d event</item>
+        <item quantity="other">%d events</item>
+    </plurals>
+    <string name="tracklens_mini_panel_empty">No events yet. Log one from the app.</string>
+    <string name="tracklens_mini_panel_pause">Pause</string>
+    <string name="tracklens_mini_panel_resume">Resume</string>
+    <string name="tracklens_mini_panel_open">Open TrackLens</string>
+    <string name="tracklens_mini_panel_close">Close mini panel</string>
+    <string name="tracklens_mini_panel_paused">Paused: new events are held back</string>
 </resources>

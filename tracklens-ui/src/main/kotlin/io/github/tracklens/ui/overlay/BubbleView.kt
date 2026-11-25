@@ -43,6 +43,21 @@ internal class BubbleView(
         fun onHide()
 
         fun onPositionChanged(position: BubblePosition)
+
+        /** A drag began (past the touch slop). */
+        fun onDragStarted() {}
+
+        /** The bubble's center moved to ([centerX], [centerY]) in parent coordinates. */
+        fun onDragMoved(
+            centerX: Float,
+            centerY: Float,
+        ) {}
+
+        /** The drag ended at ([centerX], [centerY]); return `true` if the drop was handled (the bubble won't snap). */
+        fun onDragEnded(
+            centerX: Float,
+            centerY: Float,
+        ): Boolean = false
     }
 
     var listener: Listener? = null
@@ -221,12 +236,14 @@ internal class BubbleView(
                 if (!dragging && hypot(dx, dy) > touchSlop) {
                     dragging = true
                     parent?.requestDisallowInterceptTouchEvent(true)
+                    listener?.onDragStarted()
                 }
                 if (dragging) {
                     currentArea()?.let { area ->
                         val (x, y) = BubblePositioner.clamp(downTranslationX + dx, downTranslationY + dy, area)
                         translationX = x
                         translationY = y
+                        listener?.onDragMoved(centerX(), centerY())
                     }
                 }
             }
@@ -250,6 +267,7 @@ internal class BubbleView(
 
     private fun settleAfterDrag() {
         dragging = false
+        if (listener?.onDragEnded(centerX(), centerY()) == true) return
         val area = currentArea() ?: return
         settle(BubblePositioner.positionFor(translationX, translationY, area, isRtl()))
     }
@@ -292,6 +310,12 @@ internal class BubbleView(
             insetBottom = insetBottom,
         )
     }
+
+    /** Center in parent coordinates. */
+    fun centerX(): Float = left + translationX + width / 2f
+
+    /** Center in parent coordinates. */
+    fun centerY(): Float = top + translationY + height / 2f
 
     private fun isRtl(): Boolean = (parent as? View ?: this).layoutDirection == LAYOUT_DIRECTION_RTL
 

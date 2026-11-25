@@ -7,7 +7,8 @@ android {
 }
 
 dependencies {
-    implementation(libs.kotlinx.coroutines.core)
+    // StateFlow appears in @InternalTrackLensApi signatures used by the other TrackLens modules.
+    api(libs.kotlinx.coroutines.core)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.kotlinx.coroutines.test)
