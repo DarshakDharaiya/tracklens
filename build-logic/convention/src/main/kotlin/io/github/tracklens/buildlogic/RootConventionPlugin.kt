@@ -65,14 +65,15 @@ class RootConventionPlugin : Plugin<Project> {
     }
 
     /**
-     * dependency-guard 0.5.0 declares the repository directory as an output of every `dependencyGuard` task, so Gradle
+     * dependency-guard 0.5.0 declares the repository directory as an output of its `dependencyGuard` and
+     * `dependencyGuardBaseline` tasks, so Gradle
      * rejects any task that scans the repository (Spotless, detekt, the policy check) unless it is ordered after them.
      * It only surfaced once enough tasks ran in one build (Task 8); declaring the order keeps runs deterministic.
      */
     private fun Project.orderRepositoryScansAfterDependencyGuard() {
         val scansRepository = { name: String -> name.startsWith("spotless") || name == "detekt" || name == "checkDependencyPolicy" }
         tasks.matching { scansRepository(it.name) }.configureEach {
-            mustRunAfter(subprojects.map { module -> module.tasks.matching { it.name == "dependencyGuard" } })
+            mustRunAfter(subprojects.map { module -> module.tasks.matching { it.name in DEPENDENCY_GUARD_TASKS } })
         }
     }
 
@@ -128,5 +129,6 @@ class RootConventionPlugin : Plugin<Project> {
 
     private companion object {
         val GENERATED_DIRS = listOf("**/build/**", "**/.gradle/**", ".idea/**")
+        val DEPENDENCY_GUARD_TASKS = setOf("dependencyGuard", "dependencyGuardBaseline")
     }
 }

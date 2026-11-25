@@ -15,8 +15,8 @@ import java.util.concurrent.Executor
 /**
  * Implementation behind the [io.github.tracklens.TrackLens] facade, which wraps every call in [guard].
  *
- * Logging calls pass the kill switch, then are normalized ([ParamNormalizer]) and handed to [eventSink], both
- * inside [pipelineBreaker]. Sessions (Task 25), UI
+ * Logging calls pass the kill switch, then are normalized ([ParamNormalizer]) and handed to [eventSink] (the
+ * [EventPipeline] once installed), both inside [pipelineBreaker]. Sessions (Task 25), UI
  * (Tasks 17-20) and export (Tasks 44-45) replace the remaining stub bodies.
  */
 @OptIn(InternalTrackLensApi::class)
@@ -45,6 +45,14 @@ internal object TrackLensImpl {
 
     val pipelineBreaker = CircuitBreaker(Component.PIPELINE)
 
+    /** Registered `TrackLens.addListener` listeners; kept across installs so early registrations still work. */
+    val listeners = ListenerRegistry(MainThreadExecutor)
+
+    /** The running pipeline once [install] accepted this process; also the default [eventSink]. */
+    @Volatile
+    var pipeline: EventPipeline? = null
+        private set
+
     const val NON_DEBUGGABLE_MESSAGE: String =
         "The TrackLens debug artifact is running in a non-debuggable build. It is meant for debug builds only: " +
             "depend on io.github.tracklens:tracklens-noop with releaseImplementation for release builds."
@@ -63,6 +71,18 @@ internal object TrackLensImpl {
             Diagnostics.report(Component.INSTALL, DiagnosticLevel.ERROR, NON_DEBUGGABLE_MESSAGE)
         }
         val decision = InstallGate.evaluate(application, config.mainProcessOnly)
+        if (decision == InstallDecision.ACTIVE) {
+            val started =
+                EventPipeline(
+                    liveBufferSize = config.liveBufferSize,
+                    softCap = EventPipeline.DEFAULT_SOFT_CAP,
+                    clock = Clock.Android,
+                    dispatcher = EventPipeline.newPipelineDispatcher(),
+                    listeners = listeners,
+                ).also { it.start() }
+            pipeline = started
+            eventSink = started
+        }
         isActive = decision == InstallDecision.ACTIVE
         val level = if (isActive) DiagnosticLevel.INFO else DiagnosticLevel.WARNING
         Diagnostics.report(Component.INSTALL, level, decision.explanation)
@@ -104,7 +124,8 @@ internal object TrackLensImpl {
 
     fun setSessionNotes(notes: String?) = Unit
 
-    val currentSessionId: String? get() = null
+    /** The pipeline's implicit session until real sessions arrive (Task 25). */
+    val currentSessionId: String? get() = pipeline?.sessionId
 
     fun openPanel(context: Context) = Unit
 
@@ -128,7 +149,7 @@ internal object TrackLensImpl {
     fun addListener(
         listener: TrackLensListener,
         executor: Executor?,
-    ): Subscription = Subscription {}
+    ): Subscription = listeners.add(listener, executor)
 
     /** Kill switch first (two volatile reads), then the pipeline breaker. */
     private inline fun record(crossinline call: (EventSink) -> Unit) {
@@ -144,6 +165,9 @@ internal object TrackLensImpl {
             isEnabled = true
             config = TrackLensConfig.DEFAULT
             eventSink = EventSink.NONE
+            pipeline?.close()
+            pipeline = null
+            listeners.clear()
             pipelineBreaker.reset()
         }
         Diagnostics.clear()

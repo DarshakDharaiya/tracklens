@@ -223,6 +223,32 @@ Targets: normalization ≤ 5 µs (Task 12) and `log()` p50 < 10 µs / p99 < 100 
 
 **Running benchmarks:** `./gradlew :benchmark:connectedAndroidTest` with a device connected and unlocked. Results: `benchmark/build/outputs/connected_android_test_additional_output/releaseAndroidTest/connected/<device>/*benchmarkData.json`. **Leave the phone alone while it runs:** androidx.benchmark measures only while its `IsolationActivity` is in front. When the phone went back to its home screen mid-run, the run stalled for 20+ minutes without failing; force-stopping `io.github.tracklens.benchmark.test` and re-running fixed it.
 
+## Event pipeline (Task 13)
+
+`EventPipeline` (`tracklens-core/.../internal/EventPipeline.kt`) is the `EventSink` once `install()` accepts the process.
+
+- **Caller thread** (after guard, kill switch, normalization): timestamps (wall clock + monotonic), a soft-cap check (`AtomicInteger` of pending logging calls, cap 10,000), and `trySend` to one unbounded `Channel`. Over the cap the call is dropped and counted; only the first drop is reported in diagnostics. Control messages are never dropped.
+- **One ordered queue** carries logging calls, `MarkAllRead`, and `Barrier` (tests: `awaitIdle()`). Sessions and lifecycle signals join it in Task 25, so one consumer sees a single total order.
+- **Pipeline thread** ("TrackLens-Pipeline", one background-priority daemon thread), in queue order:
+  - per-session sequence number (from 1) and elapsed time;
+  - current screen (a `SCREEN` event updates it, later events carry it);
+  - the ring buffer (`liveBufferSize`, default 2,000, newest kept);
+  - listeners;
+  - a `LiveSnapshot` (`events`, `totalEvents`, `droppedEvents`, `unreadCount`, `version`) published on a `StateFlow` at most every 100 ms: immediately, then at most once per interval while events keep coming.
+- **Processing failures** go through the pipeline's own circuit breaker. The pending count drops when a message leaves the queue, so a failing consumer can't fake overflow drops.
+- **Listeners:** `ListenerRegistry` sits outside the pipeline, so listeners added before `install()` work. Each runs on its executor (default: main thread). A throwing listener or rejecting executor is reported and the others still run.
+- **Sessions:** until Task 25 there is one implicit session per pipeline; `TrackLens.currentSessionId` returns its id.
+- **Dependency:** `kotlinx-coroutines-core` 1.10.2 (policy line) in tracklens-core, which moved JetBrains annotations from 13.0 to 23.0.0 on dependent modules. All five dependent baselines were re-recorded; the no-op's is unchanged.
+
+**Proven** (`EventPipelineTest`, 16 new tests in core, 54 in total):
+- 8 threads × 50,000 events: all 400,000 arrive numbered 1…400,000 with no gaps and each thread's order intact (0.25 s).
+- With the consumer held back and a cap of 10,000: exactly 10,000 accepted and 390,000 counted as dropped (0.16 s).
+- The publish throttle, tested on virtual time: the first event publishes at once, the rest wait exactly 100 ms.
+
+**Benchmark** (vivo V2437, Android 16): a whole `TrackLens.log(name, 10 params)` call is now 2.05 µs median (target < 10 µs). In this tight loop some calls may take the cheaper over-cap drop path; Task 16 re-measures with drops reported.
+
+**Build fix:** `dependencyGuardBaseline` also declares the repository as its output, so the repository scans now run after both dependency-guard tasks.
+
 ## Environment quirks (local machine)
 
 - **Expected warning:** Gradle on JDK 25 prints `sun.misc.Unsafe` warnings from its bundled protobuf. They are harmless.
