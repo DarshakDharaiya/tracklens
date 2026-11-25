@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Shared Android Lint configuration for every module. Library modules also treat warnings as errors. -->
+<!-- Every disabled or narrowed issue needs a reason. -->
+<lint>
+    <!-- Versions are chosen deliberately by docs/dependencies.md ("stable minus one minor"),
+         so "a newer version is available" findings are expected and not actionable. -->
+    <issue id="GradleDependency" severity="ignore" />
+    <issue id="NewerVersionAvailable" severity="ignore" />
+    <issue id="AndroidGradlePluginVersion" severity="ignore" />
+
+    <!-- Lifecycle 2.10.x (the policy line, pulled in by Compose 1.12) bundles lint checks compiled
+         against a Kotlin compiler API that AGP 9.5's lint no longer has, so lint skips them and
+         reports ObsoleteLintCustomCheck. Only that registry is ignored; any other library whose
+         checks break still fails the build. Remove when the Lifecycle policy line moves to 2.11. -->
+    <issue id="ObsoleteLintCustomCheck">
+        <ignore regexp="LifecycleRuntimeIssueRegistry" />
+    </issue>
+</lint>

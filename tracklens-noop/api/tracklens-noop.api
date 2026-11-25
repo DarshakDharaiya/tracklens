@@ -1,0 +1,8 @@
+public abstract interface annotation class io/github/tracklens/InternalTrackLensApi : java/lang/annotation/Annotation {
+}
+
+public final class io/github/tracklens/TrackLens {
+	public static final field INSTANCE Lio/github/tracklens/TrackLens;
+	public static final fun isNoOp ()Z
+}
+

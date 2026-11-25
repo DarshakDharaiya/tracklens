@@ -1,0 +1,117 @@
+# Runs every gate from `./gradlew check` plus a full build, split into parallel jobs so a failure
+# points at its cause. Mark `ci-ok` as the single required status check in branch protection.
+# What each gate enforces: docs/build-notes.md ("Quality gates", "API gates").
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # A new push to a pull request supersedes the old run; runs on main always finish.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  static:
+    name: Static analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup-build
+      - name: Formatting, detekt, dependency policy, plugin validation, Android Lint
+        run: >-
+          ./gradlew --continue
+          spotlessCheck detekt checkDependencyPolicy
+          :build-logic:convention:validatePlugins
+          lint
+      - name: Upload reports
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: static-reports
+          path: |
+            build/reports/detekt/
+            build/reports/dependency-policy.txt
+            **/build/reports/lint-results-*.html
+          if-no-files-found: ignore
+          retention-days: 14
+
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup-build
+      - name: Unit tests
+        # Roborazzi screenshot verification joins this job with the first screenshot tests.
+        run: ./gradlew --continue testDebugUnitTest
+      - name: Upload reports
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: unit-test-reports
+          path: '**/build/reports/tests/'
+          if-no-files-found: ignore
+          retention-days: 14
+
+  api:
+    name: API and release safety
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup-build
+      - name: ABI dumps, no-op parity, dependency baselines, manifests, AAR floors
+        run: >-
+          ./gradlew --continue
+          apiCheck checkNoopApiParity dependencyGuard
+          verifyReleaseManifest verifyReleaseAarFloors
+      - name: Upload reports
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: api-reports
+          path: |
+            build/reports/noop-api-parity.txt
+            **/build/api/
+            **/build/reports/release-safety/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup-build
+      - name: Assemble all modules, the sample (debug + R8 release) and the benchmark test APK
+        run: ./gradlew assemble :benchmark:assembleAndroidTest
+
+  ci-ok:
+    name: CI OK
+    # One stable status to require in branch protection, whatever jobs are added later.
+    if: always()
+    needs: [static, unit, api, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: All jobs succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for result in $RESULTS; do
+            if [ "$result" != "success" ]; then
+              echo "::error::At least one CI job did not succeed."
+              exit 1
+            fi
+          done

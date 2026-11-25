@@ -1,0 +1,29 @@
+# detekt overrides on top of the default configuration (buildUponDefaultConfig = true).
+# Keep this file small: every override needs a reason.
+
+build:
+  maxIssues: 0
+
+naming:
+  FunctionNaming:
+    # Composables are PascalCase by convention.
+    ignoreAnnotated: ['Composable']
+
+complexity:
+  LongParameterList:
+    # Composables commonly take many optional parameters.
+    ignoreDefaultParameters: true
+    ignoreAnnotated: ['Composable']
+
+style:
+  MaxLineLength:
+    # Same limit as ktlint (.editorconfig max_line_length).
+    maxLineLength: 140
+  MagicNumber:
+    # Colors, dimensions and preview data are declared as properties.
+    ignorePropertyDeclaration: true
+    ignoreAnnotated: ['Preview']
+    excludes: ['**/test/**', '**/androidTest/**', '**/benchmark/**']
+  UnusedPrivateMember:
+    # @Preview functions are private and only used by the IDE.
+    ignoreAnnotated: ['Preview']
