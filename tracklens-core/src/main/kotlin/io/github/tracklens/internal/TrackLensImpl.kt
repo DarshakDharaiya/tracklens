@@ -10,6 +10,7 @@ import io.github.tracklens.InternalTrackLensApi
 import io.github.tracklens.Subscription
 import io.github.tracklens.TrackLensConfig
 import io.github.tracklens.TrackLensListener
+import io.github.tracklens.internal.spi.TrackLensModule
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.concurrent.Executor
 
@@ -40,6 +41,11 @@ internal object TrackLensImpl {
     var config: TrackLensConfig = TrackLensConfig.DEFAULT
         private set
 
+    /** The modules found on the classpath that installed (tracklens-ui and others); see [ModuleLoader]. */
+    @Volatile
+    var modules: List<TrackLensModule> = emptyList()
+        private set
+
     /** Where accepted logging calls go. Task 13 installs the pipeline here; tests install failing sinks. */
     @Volatile
     var eventSink: EventSink = EventSink.NONE
@@ -56,6 +62,10 @@ internal object TrackLensImpl {
     @Volatile
     var pipeline: EventPipeline? = null
         private set
+
+    const val NO_PANEL_MESSAGE: String =
+        "TrackLens.openPanel: no TrackLens screen is available. Add io.github.tracklens:tracklens (or tracklens-ui) " +
+            "to the debug build."
 
     const val NON_DEBUGGABLE_MESSAGE: String =
         "The TrackLens debug artifact is running in a non-debuggable build. It is meant for debug builds only: " +
@@ -87,7 +97,7 @@ internal object TrackLensImpl {
                 ).also { it.start() }
             pipeline = started
             eventSink = started
-            ModuleLoader.installAll(application, RuntimeImpl(config, started, bubbleVisibility))
+            modules = ModuleLoader.installAll(application, RuntimeImpl(config, started, bubbleVisibility))
         }
         isActive = decision == InstallDecision.ACTIVE
         val level = if (isActive) DiagnosticLevel.INFO else DiagnosticLevel.WARNING
@@ -133,7 +143,13 @@ internal object TrackLensImpl {
     /** The pipeline's implicit session until real sessions arrive (Task 25). */
     val currentSessionId: String? get() = pipeline?.sessionId
 
-    fun openPanel(context: Context) = Unit
+    /** Asks each installed module to open its screen; tracklens-ui does (Task 19). */
+    fun openPanel(context: Context) {
+        if (!isActive) return
+        if (modules.none { it.openPanel(context) }) {
+            Diagnostics.report(Component.INSTALL, DiagnosticLevel.WARNING, NO_PANEL_MESSAGE)
+        }
+    }
 
     fun showBubble() {
         bubbleVisibility.value = true
@@ -177,6 +193,7 @@ internal object TrackLensImpl {
             eventSink = EventSink.NONE
             pipeline?.close()
             pipeline = null
+            modules = emptyList()
             listeners.clear()
             bubbleVisibility.value = true
             pipelineBreaker.reset()

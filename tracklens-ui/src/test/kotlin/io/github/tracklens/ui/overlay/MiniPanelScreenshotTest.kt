@@ -13,6 +13,7 @@ import com.github.takahirom.roborazzi.captureRoboImage
 import io.github.tracklens.Severity
 import io.github.tracklens.ValidationIssues
 import io.github.tracklens.internal.TrackedEvents
+import io.github.tracklens.ui.design.TrackLensTheme
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -58,7 +59,7 @@ class MiniPanelScreenshotTest {
     private fun MiniPanelUnderTest(
         events: List<io.github.tracklens.TrackedEvent>,
         paused: Boolean,
-    ) = OverlayTheme {
+    ) = TrackLensTheme {
         MiniPanel(
             events = events,
             totalEvents = events.size.toLong(),

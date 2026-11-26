@@ -20,6 +20,12 @@ public interface TrackLensModule {
         application: Application,
         runtime: TrackLensRuntime,
     )
+
+    /**
+     * Opens this module's TrackLens screen from [context], for `TrackLens.openPanel`. Returns `false` if the module
+     * has no screen; core then asks the next module. Called on the main thread, after [onInstall].
+     */
+    public fun openPanel(context: Context): Boolean = false
 }
 
 /** What tracklens-core offers its modules. */

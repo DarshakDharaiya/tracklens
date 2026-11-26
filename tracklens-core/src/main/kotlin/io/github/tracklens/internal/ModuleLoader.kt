@@ -33,17 +33,21 @@ internal class RuntimeImpl(
     ) = handleInternalFailure(Component.OVERLAY, message, failure)
 }
 
-/** Finds the TrackLens modules on the classpath and installs each one; a failing module never stops the others. */
+/**
+ * Finds the TrackLens modules on the classpath and installs each one; a failing module never stops the others.
+ * Returns the modules that installed.
+ */
 internal object ModuleLoader {
     @Suppress("TooGenericExceptionCaught") // A broken module must not break install().
     fun installAll(
         application: Application,
         runtime: TrackLensRuntime,
-    ): List<String> {
-        val installed = mutableListOf<String>()
+        discover: () -> List<TrackLensModule> = ::discoverModules,
+    ): List<TrackLensModule> {
+        val installed = mutableListOf<TrackLensModule>()
         val modules =
             try {
-                ServiceLoader.load(TrackLensModule::class.java, TrackLensModule::class.java.classLoader).toList()
+                discover()
             } catch (failure: Throwable) {
                 handleInternalFailure(Component.INSTALL, "TrackLens modules could not be loaded", failure)
                 emptyList()
@@ -51,7 +55,7 @@ internal object ModuleLoader {
         for (module in modules) {
             try {
                 module.onInstall(application, runtime)
-                installed += module.javaClass.name
+                installed += module
             } catch (failure: Throwable) {
                 handleInternalFailure(Component.INSTALL, "TrackLens module ${module.javaClass.name} failed to install", failure)
             }
@@ -59,8 +63,17 @@ internal object ModuleLoader {
         Diagnostics.report(
             Component.INSTALL,
             DiagnosticLevel.INFO,
-            if (installed.isEmpty()) "No TrackLens modules found." else "Modules installed: ${installed.joinToString()}",
+            if (installed.isEmpty()) {
+                "No TrackLens modules found."
+            } else {
+                "Modules installed: ${installed.joinToString {
+                    it.javaClass.name
+                }}"
+            },
         )
         return installed
     }
+
+    private fun discoverModules(): List<TrackLensModule> =
+        ServiceLoader.load(TrackLensModule::class.java, TrackLensModule::class.java.classLoader).toList()
 }

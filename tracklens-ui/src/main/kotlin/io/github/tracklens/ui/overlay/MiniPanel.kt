@@ -1,7 +1,6 @@
 package io.github.tracklens.ui.overlay
 
 import android.content.Context
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,8 +16,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -27,7 +24,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.pluralStringResource
@@ -39,9 +35,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.tracklens.ThemeConfig
 import io.github.tracklens.TrackedEvent
 import io.github.tracklens.internal.LiveSnapshot
 import io.github.tracklens.ui.R
+import io.github.tracklens.ui.design.TrackLensTheme
 import kotlinx.coroutines.flow.StateFlow
 
 /** How many events the mini panel lists. */
@@ -153,30 +151,12 @@ private fun EventRow(event: TrackedEvent) {
     }
 }
 
-/** Interim TrackLens colors for overlay UI; Task 19 replaces this with the full `TrackLensTheme`. */
-@Composable
-internal fun OverlayTheme(content: @Composable () -> Unit) {
-    val colors =
-        if (isSystemInDarkTheme()) {
-            darkColorScheme(primary = TealDark, tertiary = AmberDark)
-        } else {
-            lightColorScheme(primary = Teal, tertiary = AmberLight)
-        }
-    MaterialTheme(colorScheme = colors, content = content)
-}
-
-/** The bubble's teal; white text on it is about 6:1. */
-private val Teal = Color(0xFF00695C)
-private val TealDark = Color(0xFF4DB6AC)
-
-/** The paused notice. */
-private val AmberLight = Color(0xFF8D4A00)
-private val AmberDark = Color(0xFFFFB74D)
-
 /** Creates the `ComposeView` hosting the mini panel, with its own lifecycle (see [OverlayViewTreeOwner]). */
+@Suppress("LongParameterList") // View factory: each argument is a separate dependency of the panel.
 internal fun createMiniPanelView(
     context: Context,
     snapshots: StateFlow<LiveSnapshot>,
+    theme: ThemeConfig,
     owner: OverlayViewTreeOwner,
     onOpen: () -> Unit,
     onClose: () -> Unit,
@@ -185,7 +165,7 @@ internal fun createMiniPanelView(
         owner.attachTo(this)
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
         setContent {
-            OverlayTheme {
+            TrackLensTheme(theme) {
                 val snapshot by snapshots.collectAsState()
                 var frozen by remember { mutableStateOf<LiveSnapshot?>(null) }
                 val shown = frozen ?: snapshot

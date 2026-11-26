@@ -23,4 +23,14 @@
     <string name="tracklens_mini_panel_open">Open TrackLens</string>
     <string name="tracklens_mini_panel_close">Close mini panel</string>
     <string name="tracklens_mini_panel_paused">Paused: new events are held back</string>
+
+    <!-- TrackLens screen, launcher shortcut. -->
+    <string name="tracklens_title">TrackLens</string>
+    <string name="tracklens_shortcut_long_label">Open TrackLens</string>
+    <string name="tracklens_tab_live">Live</string>
+    <string name="tracklens_tab_sessions">Sessions</string>
+    <string name="tracklens_tab_plan">Plan</string>
+    <string name="tracklens_tab_more">More</string>
+    <string name="tracklens_screen_coming_soon">This screen arrives in an upcoming TrackLens version.</string>
+    <string name="tracklens_not_installed">TrackLens is not running in this process. Call TrackLens.install() in Application.onCreate(), then reopen TrackLens.</string>
 </resources>

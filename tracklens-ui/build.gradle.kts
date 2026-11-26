@@ -16,4 +16,5 @@ dependencies {
     implementation(project(":tracklens-validation"))
     implementation(libs.androidx.core)
     implementation(libs.kotlinx.coroutines.android)
+    testImplementation(libs.androidx.compose.ui.test.junit4)
 }

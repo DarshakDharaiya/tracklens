@@ -334,6 +334,51 @@ Targets: normalization ≤ 5 µs (Task 12) and `log()` p50 < 10 µs / p99 < 100 
 
 **Build additions:** tracklens-ui depends on `kotlinx-coroutines-android` (1.10.2, the policy line) and ships `consumer-rules.pro`. tracklens-core exposes `kotlinx-coroutines-core` as `api`, because `TrackLensRuntime` uses `StateFlow`. The ABI dump (`apiBuild`) now drops the Compose compiler's `ComposableSingletons$<File>Kt` classes. They are public in bytecode but not API: their getters are module-internal and named after lambda hashes, so the dump would change on every UI edit.
 
+## TrackLens screen shell (Task 19)
+
+**`TrackLensActivity`** (`tracklens-ui/.../ui/`):
+- **Declared in tracklens-ui's manifest:**
+  - `exported="false"`;
+  - `taskAffinity="${applicationId}.tracklens"` with `singleTask`, so it is its own entry in Recents and Back returns to the app;
+  - the platform `Theme.Material.NoActionBar`, so there is no MDC XML dependency;
+  - `enableOnBackInvokedCallback`, for predictive back in hosts that target below Android 16.
+- **Edge-to-edge**, and it implements `NoBubbleScreen`, so the bubble never shows on it.
+- **The runtime** comes from `UiRuntime`, which `UiModule` sets on install. If Android restores the screen into a process where TrackLens isn't installed, it explains what to do instead of crashing.
+
+**Navigation:** `BackStack` is immutable, never empty and always rooted at Live.
+- Switching tabs puts that tab's root above Live, so Back from any tab returns to Live, and Back from Live closes TrackLens.
+- Tapping the current tab again returns to its root.
+- Back goes through `BackHandler`, so predictive back works.
+- The stack is saved with `rememberSaveable` as route strings (`live`, `plan`, `event/42`) instead of `@Parcelize`, which avoids adding the parcelize plugin. Routes it doesn't recognize are dropped on restore.
+- Tab screens are placeholders until Tasks 20 onwards.
+
+**`TrackLensTheme`** (`ui.design`):
+- **Palette:** hand-tuned teal light and dark schemes (the bubble's teal, a slate secondary, an amber tertiary).
+- **Seed color:** `ThemeConfig.seedColor` derives only the primary group, keeping the seed's hue and shifting its lightness until every pair passes.
+- **Dynamic color:** on Android 12+ when `dynamicColor` is on.
+- **Dark mode:** follows `DarkMode`.
+- The mini panel now uses it too, replacing the interim overlay theme; its screenshots were re-recorded.
+- **Icons:** the tab icons are small `ImageVector`s in `TrackLensIcons`, so there is no dependency on the Material icons artifact.
+
+**Opening TrackLens:**
+- **`TrackLens.openPanel`:** core asks each installed module (`TrackLensModule.openPanel`, default `false`). `UiModule` starts the activity in its own task. With no UI module, it logs a diagnostics warning.
+- **The mini panel's "Open TrackLens"** goes through the same path.
+- **Launcher shortcut:** a dynamic shortcut ("TrackLens", teal lens icon), pushed by `UiModule` on a background thread because it is a system call. It is removed when `BubbleConfig.showAppShortcut` is `false`.
+
+**Finding:** the first seeded dark palette passed against the surface (4.5:1) but not against the surface containers where text buttons sit (4.36:1). Seeded primaries are now checked against `surfaceContainerHighest`, the worst case in both modes.
+
+**Device finding:** Android attaches dynamic shortcuts to the app's launcher activity, and `pushDynamicShortcut` throws (`ShortcutService.fillInDefaultActivity`) when there is none, as in a library's test APK. The guard caught and reported it. `LauncherShortcut` now skips apps without a launcher activity, and the androidTest host activity is a launcher activity, as in a real app.
+
+**Tests:**
+- 7 `BackStack` tests (JVM).
+- 4 palette contrast tests. Every text pair is ≥ 4.5:1 and outlines ≥ 3:1, for the default palette and 9 seeds (pale yellow, cyan, pink, blue, grey, near-black, near-white, translucent), in light and dark.
+- 6 Robolectric activity tests: opens on Live; tab then Back to Live then Back closes; the stack survives recreation; the not-installed state; two screenshots (`tracklens_shell_live_light`, `tracklens_shell_sessions_dark`).
+- 5 `UiModule` tests: runtime handoff, `openPanel` starts the activity with `NEW_TASK`, the shortcut is published, an app without a launcher activity gets none (and no error), and turning it off removes it.
+- 3 core `ModuleLoader` tests: a failing module doesn't stop the others, a broken discovery is reported, modules without a screen don't claim `openPanel`.
+- 2 instrumented tests on the phone through the real install: `openPanel` opens TrackLens in a different task with no bubble, and Back returns to the same host activity; the launcher shortcut is published.
+
+**Build additions:** tracklens-ui uses `ui-test-junit4` for its Robolectric Compose tests, with the v2 `createEmptyComposeRule`.
+
 ## Environment quirks (local machine)
 
 - **Expected warning:** Gradle on JDK 25 prints `sun.misc.Unsafe` warnings from its bundled protobuf. They are harmless.

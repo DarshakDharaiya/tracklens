@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+        <!--
+            TrackLens' own screen. A separate task (like Chucker) so it sits next to the app in Recents; not exported,
+            so only the app (bubble, launcher shortcut, TrackLens.openPanel) can open it. Predictive back is opted in
+            for hosts that target less than Android 16, where it is not yet the default.
+        -->
+        <activity
+            android:name="io.github.tracklens.ui.TrackLensActivity"
+            android:enableOnBackInvokedCallback="true"
+            android:exported="false"
+            android:label="@string/tracklens_title"
+            android:launchMode="singleTask"
+            android:taskAffinity="${applicationId}.tracklens"
+            android:theme="@android:style/Theme.Material.NoActionBar"
+            tools:targetApi="33" />
+    </application>
+</manifest>

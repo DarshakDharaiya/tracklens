@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Host activities for OverlayDeviceTest; test APK only, never merged into library consumers. -->
+    <!-- Host activities for the device tests; test APK only, never merged into library consumers. -->
     <application>
-        <activity android:name="io.github.tracklens.ui.overlay.HostActivityOne" android:exported="false" />
+        <!-- The launcher activity, as every real host has: Android attaches launcher shortcuts to it. -->
+        <activity android:name="io.github.tracklens.ui.overlay.HostActivityOne" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <activity android:name="io.github.tracklens.ui.overlay.HostActivityTwo" android:exported="false" />
         <activity android:name="io.github.tracklens.ui.overlay.HostActivityThree" android:exported="false" />
     </application>

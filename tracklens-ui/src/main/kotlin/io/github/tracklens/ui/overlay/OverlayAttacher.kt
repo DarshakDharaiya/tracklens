@@ -4,7 +4,6 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import android.view.Gravity
-import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.compose.ui.platform.ComposeView
@@ -200,6 +199,7 @@ internal class OverlayAttacher(
                 createMiniPanelView(
                     context = activity,
                     snapshots = runtime.liveSnapshot,
+                    theme = runtime.config.theme,
                     owner = owner,
                     onOpen = {
                         closeMiniPanel()
@@ -224,8 +224,8 @@ internal class OverlayAttacher(
         private fun panelLayoutParams(): FrameLayout.LayoutParams {
             val density = activity.resources.displayMetrics.density
             val gap = (PANEL_GAP_DP * density).roundToInt()
-            val onLeft = (bubble.position.edge == Edge.START) != (decor.layoutDirection == View.LAYOUT_DIRECTION_RTL)
-            val horizontal = if (onLeft) Gravity.LEFT else Gravity.RIGHT
+            // START/END resolve against the decor's layout direction, as the bubble's edge does.
+            val horizontal = if (bubble.position.edge == Edge.START) Gravity.START else Gravity.END
             val upperHalf = bubble.centerY() < decor.height / 2f
             return FrameLayout
                 .LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
