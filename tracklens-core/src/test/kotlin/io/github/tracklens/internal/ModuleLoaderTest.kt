@@ -78,6 +78,8 @@ class ModuleLoaderTest {
 
         override fun markAllRead() = Unit
 
+        override fun clearLive() = Unit
+
         override fun openPanel(context: Context) = Unit
 
         override fun reportFailure(

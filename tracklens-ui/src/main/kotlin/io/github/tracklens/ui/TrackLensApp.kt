@@ -2,10 +2,14 @@ package io.github.tracklens.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -25,7 +29,10 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import io.github.tracklens.internal.spi.TrackLensRuntime
 import io.github.tracklens.ui.design.TrackLensIcons
+import io.github.tracklens.ui.live.EventDetailScreen
+import io.github.tracklens.ui.live.LiveScreen
 import io.github.tracklens.ui.navigation.BackStack
 import io.github.tracklens.ui.navigation.Destination
 import io.github.tracklens.ui.navigation.Tab
@@ -33,14 +40,17 @@ import io.github.tracklens.ui.navigation.Tab
 /**
  * TrackLens' screen: a back stack ([BackStack], saved across recreation) and bottom navigation. Back pops the stack
  * through [BackHandler], which supports predictive back; at Live, Back is left to the activity, which closes.
- * The tab screens are filled in by Tasks 20 onwards.
+ * Live and event detail arrived in Task 20; the other tabs are filled in by later tasks. [runtime] is `null` when
+ * TrackLens is not installed in this process.
  */
 @Composable
-internal fun TrackLensApp(installed: Boolean) {
+internal fun TrackLensApp(runtime: TrackLensRuntime?) {
     var stack by rememberSaveable(stateSaver = BackStack.Saver) { mutableStateOf(BackStack.START) }
     BackHandler(enabled = stack.canGoBack) { stack.pop()?.let { stack = it } }
 
     Scaffold(
+        // Screens draw their own top bars, which handle the status bar; the navigation bar handles the bottom.
+        contentWindowInsets = WindowInsets(0),
         bottomBar = {
             NavigationBar {
                 for (tab in Tab.entries) {
@@ -55,47 +65,53 @@ internal fun TrackLensApp(installed: Boolean) {
             }
         },
     ) { padding ->
-        if (installed) Screen(stack.current, padding) else NotInstalled(padding)
+        Box(Modifier.padding(padding).consumeWindowInsets(padding)) {
+            if (runtime == null) {
+                NotInstalled()
+            } else {
+                Screen(runtime, stack.current, navigate = { change -> stack = change(stack) })
+            }
+        }
     }
 }
 
 @Composable
 private fun Screen(
+    runtime: TrackLensRuntime,
     destination: Destination,
-    padding: PaddingValues,
+    navigate: ((BackStack) -> BackStack) -> Unit,
 ) {
     when (destination) {
+        Destination.TabRoot(Tab.LIVE) -> {
+            LiveScreen(runtime, onOpenEvent = { sequence -> navigate { it.push(Destination.EventDetail(sequence)) } })
+        }
+
         is Destination.TabRoot -> {
-            Placeholder(
-                stringResource(destination.tab.label),
-                stringResource(R.string.tracklens_screen_coming_soon),
-                padding,
-            )
+            Placeholder(stringResource(destination.tab.label), stringResource(R.string.tracklens_screen_coming_soon))
         }
 
         is Destination.EventDetail -> {
-            Placeholder(
-                "#${destination.sequence}",
-                stringResource(R.string.tracklens_screen_coming_soon),
-                padding,
+            EventDetailScreen(
+                runtime = runtime,
+                sequence = destination.sequence,
+                onNavigate = { sequence -> navigate { it.replaceTop(Destination.EventDetail(sequence)) } },
+                onBack = { navigate { it.pop() ?: it } },
             )
         }
     }
 }
 
 @Composable
-private fun NotInstalled(padding: PaddingValues) =
-    Placeholder(stringResource(R.string.tracklens_title), stringResource(R.string.tracklens_not_installed), padding)
+private fun NotInstalled() = Placeholder(stringResource(R.string.tracklens_title), stringResource(R.string.tracklens_not_installed))
 
-/** A centered title and explanation; also the shape of the empty states to come. */
+/** A centered title and explanation, for tabs that arrive in later tasks. */
 @Composable
 private fun Placeholder(
     title: String,
     body: String,
-    padding: PaddingValues,
 ) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+        modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

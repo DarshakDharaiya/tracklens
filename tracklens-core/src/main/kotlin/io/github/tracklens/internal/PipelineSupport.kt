@@ -46,6 +46,9 @@ internal sealed interface PipelineMessage {
     /** The live view became visible; unread events count as read. */
     object MarkAllRead : PipelineMessage
 
+    /** "Clear" in the live view: empty the live buffer. Sequence numbers and the session continue. */
+    object ClearLive : PipelineMessage
+
     /** Completes [done] once every earlier message has been processed and the snapshot is published. */
     class Barrier(
         val done: () -> Unit,

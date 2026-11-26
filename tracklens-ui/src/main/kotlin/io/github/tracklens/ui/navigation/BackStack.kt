@@ -66,6 +66,9 @@ internal class BackStack private constructor(
 
     fun push(destination: Destination): BackStack = BackStack(entries + destination)
 
+    /** Replaces the top screen (Previous/Next in event detail), so Back still returns to where it was opened. */
+    fun replaceTop(destination: Destination): BackStack = if (canGoBack) BackStack(entries.dropLast(1) + destination) else push(destination)
+
     /** The stack after Back, or `null` when Back should leave TrackLens. */
     fun pop(): BackStack? = if (canGoBack) BackStack(entries.dropLast(1)) else null
 

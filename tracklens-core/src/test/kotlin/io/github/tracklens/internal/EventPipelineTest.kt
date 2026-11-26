@@ -144,6 +144,21 @@ class EventPipelineTest {
     }
 
     @Test
+    fun clearEmptiesTheLiveBufferButSequencesContinue() {
+        val pipeline = newPipeline().apply { start() }
+        repeat(3) { pipeline.event("before", NormalizedParams.EMPTY, source = null) }
+
+        pipeline.clearLive()
+        pipeline.event("after", NormalizedParams.EMPTY, source = null)
+        assertTrue(pipeline.awaitIdle())
+
+        val snapshot = pipeline.snapshot.value
+        assertEquals(listOf(4L), snapshot.events.map { it.sequence })
+        assertEquals(1, snapshot.unreadCount)
+        assertEquals(4L, snapshot.totalEvents)
+    }
+
+    @Test
     fun snapshotsArePublishedAtMostEveryHundredMilliseconds() {
         val scheduler = TestCoroutineScheduler()
         val pipeline = newPipeline(dispatcher = StandardTestDispatcher(scheduler)).apply { start() }

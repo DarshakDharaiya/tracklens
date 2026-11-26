@@ -33,4 +33,73 @@
     <string name="tracklens_tab_more">More</string>
     <string name="tracklens_screen_coming_soon">This screen arrives in an upcoming TrackLens version.</string>
     <string name="tracklens_not_installed">TrackLens is not running in this process. Call TrackLens.install() in Application.onCreate(), then reopen TrackLens.</string>
+    <!-- Live screen. -->
+    <plurals name="tracklens_live_count">
+        <item quantity="one">%d event</item>
+        <item quantity="other">%d events</item>
+    </plurals>
+    <string name="tracklens_live_search_hint">Search name, screen, parameters</string>
+    <string name="tracklens_live_search_clear">Clear search</string>
+    <string name="tracklens_live_pause">Pause</string>
+    <string name="tracklens_live_resume">Resume</string>
+    <string name="tracklens_live_follow">Follow newest events</string>
+    <string name="tracklens_live_clear">Clear the live list</string>
+    <string name="tracklens_live_jump_newest">Jump to newest</string>
+    <plurals name="tracklens_live_paused_banner">
+        <item quantity="one">Paused · %d new event held back</item>
+        <item quantity="other">Paused · %d new events held back</item>
+    </plurals>
+    <plurals name="tracklens_live_dropped_banner">
+        <item quantity="one">%d logging call was dropped: the app logged faster than TrackLens could keep up.</item>
+        <item quantity="other">%d logging calls were dropped: the app logged faster than TrackLens could keep up.</item>
+    </plurals>
+    <string name="tracklens_live_empty">No events yet. Log an event in the app and it appears here.</string>
+    <string name="tracklens_live_no_matches">No events match the search and filters.</string>
+    <string name="tracklens_live_clear_filters">Clear filters</string>
+    <string name="tracklens_filter_kind">Kind</string>
+    <string name="tracklens_filter_screen">Screen</string>
+    <string name="tracklens_filter_source">Source</string>
+    <string name="tracklens_filter_severity">Severity</string>
+    <string name="tracklens_filter_severity_at_least">%s or worse</string>
+    <string name="tracklens_filter_issues">Has issues</string>
+    <string name="tracklens_filter_any">Any</string>
+    <string name="tracklens_filter_no_options">Nothing to choose yet</string>
+    <string name="tracklens_filter_count">%1$s · %2$d</string>
+    <string name="tracklens_row_open">Open details</string>
+    <plurals name="tracklens_row_issues">
+        <item quantity="one">%1$d issue, worst: %2$s</item>
+        <item quantity="other">%1$d issues, worst: %2$s</item>
+    </plurals>
+    <string name="tracklens_kind_event">Event</string>
+    <string name="tracklens_kind_user_property">User property</string>
+    <string name="tracklens_kind_user_id">User ID</string>
+    <string name="tracklens_kind_screen">Screen view</string>
+    <string name="tracklens_severity_info">Info</string>
+    <string name="tracklens_severity_warning">Warning</string>
+    <string name="tracklens_severity_error">Error</string>
+
+    <!-- Event detail. -->
+    <string name="tracklens_detail_back">Back</string>
+    <string name="tracklens_detail_previous">Previous event</string>
+    <string name="tracklens_detail_next">Next event</string>
+    <plurals name="tracklens_detail_missing">
+        <item quantity="one">Event #%1$d is no longer in the live list. TrackLens keeps the newest %2$d event.</item>
+        <item quantity="other">Event #%1$d is no longer in the live list. TrackLens keeps the newest %2$d events.</item>
+    </plurals>
+    <string name="tracklens_detail_overview">Overview</string>
+    <string name="tracklens_detail_sequence">Sequence</string>
+    <string name="tracklens_detail_kind">Kind</string>
+    <string name="tracklens_detail_time">Time</string>
+    <string name="tracklens_detail_elapsed">Since session start</string>
+    <string name="tracklens_detail_screen">Screen</string>
+    <string name="tracklens_detail_source">Source</string>
+    <string name="tracklens_detail_session">Session</string>
+    <string name="tracklens_detail_params">Parameters</string>
+    <string name="tracklens_detail_no_params">No parameters</string>
+    <string name="tracklens_detail_redacted">redacted</string>
+    <string name="tracklens_detail_issues">Issues</string>
+    <string name="tracklens_detail_no_issues">No issues found</string>
+    <string name="tracklens_detail_json">JSON</string>
+    <string name="tracklens_detail_copy">Copy JSON</string>
+    <string name="tracklens_detail_copied">Copied</string>
 </resources>

@@ -135,6 +135,11 @@ internal class EventPipeline(
         queue.trySend(PipelineMessage.MarkAllRead)
     }
 
+    /** Empties the live buffer and the unread count, in queue order with the calls around it. */
+    fun clearLive() {
+        queue.trySend(PipelineMessage.ClearLive)
+    }
+
     /** Blocks until everything queued so far is processed and published. For tests and shutdown paths. */
     fun awaitIdle(timeoutMillis: Long = AWAIT_IDLE_TIMEOUT_MILLIS): Boolean {
         val latch = CountDownLatch(1)
@@ -158,6 +163,12 @@ internal class EventPipeline(
             }
 
             PipelineMessage.MarkAllRead -> {
+                unread = 0
+                markDirty()
+            }
+
+            PipelineMessage.ClearLive -> {
+                ring.clear()
                 unread = 0
                 markDirty()
             }

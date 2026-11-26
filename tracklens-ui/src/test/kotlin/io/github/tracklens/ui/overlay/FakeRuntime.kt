@@ -31,6 +31,11 @@ class FakeRuntime(
         snapshots.value = snapshots.value.let { LiveSnapshot(it.events, it.totalEvents, it.droppedEvents, 0, it.version + 1) }
     }
 
+    override fun clearLive() {
+        calls += "clearLive"
+        snapshots.value = snapshots.value.let { LiveSnapshot(emptyList(), it.totalEvents, it.droppedEvents, 0, it.version + 1) }
+    }
+
     override fun openPanel(context: Context) {
         calls += "openPanel"
     }
@@ -44,5 +49,15 @@ class FakeRuntime(
 
     fun publishUnread(unread: Int) {
         snapshots.value = snapshots.value.let { LiveSnapshot(it.events, it.totalEvents + unread, it.droppedEvents, unread, it.version + 1) }
+    }
+
+    /** Publishes [events] (oldest first) as the live buffer, as the pipeline would. */
+    fun publish(
+        events: List<io.github.tracklens.TrackedEvent>,
+        dropped: Long = 0,
+        unread: Int = 0,
+    ) {
+        snapshots.value =
+            LiveSnapshot(events, events.lastOrNull()?.sequence ?: 0, dropped, unread, snapshots.value.version + 1)
     }
 }

@@ -46,6 +46,9 @@ public interface TrackLensRuntime {
     /** The user has seen the live events: reset the unread count. */
     public fun markAllRead()
 
+    /** Empties the live view's buffer ("Clear" on the Live screen); stored sessions are not affected. */
+    public fun clearLive()
+
     /** Opens the TrackLens panel, as `TrackLens.openPanel` does. */
     public fun openPanel(context: Context)
 

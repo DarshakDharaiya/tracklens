@@ -379,6 +379,68 @@ Targets: normalization ≤ 5 µs (Task 12) and `log()` p50 < 10 µs / p99 < 100 
 
 **Build additions:** tracklens-ui uses `ui-test-junit4` for its Robolectric Compose tests, with the v2 `createEmptyComposeRule`.
 
+## Live screen and event detail (Task 20)
+
+**Live** (`ui/live/LiveScreen.kt`):
+- **The list:** every event of this run, newest first, keyed by sequence number. Each row shows the number and time, the name, the screen and parameter keys, a kind label (unless it's a plain event) and an icon for its worst issue. The icon's shape differs by severity, and it is spoken as "2 issues, worst: Error". Seeing the screen marks events read.
+- **Search:** case-insensitive, over the name, screen, parameter keys and parameter values, including nested maps and lists.
+- **Filter chips:** Kind, Screen and Source (multi-select menus built from the events shown), Severity ("Warning or worse") and "Has issues". There's no Category chip yet: events get categories from the tracking plan in Task 38.
+- **Pause** freezes the list at the newest sequence number and shows "Paused · N new events held back" with Resume. It stores only that number, so it survives rotation. Events older than the buffer still roll out while paused.
+- **Follow newest** (a toggle in the top bar) keeps the list at the top. Dragging the list turns it off, and "Jump to newest" turns it back on.
+- **Clear** empties the live buffer through a new pipeline message (`ClearLive`, in queue order). Sequence numbers and the session continue.
+- **Dropped-calls banner:** shown when the pipeline dropped logging calls because the app logged faster than it could keep up.
+- **State:** the filter (`LiveFilter`, a plain class), pause and follow live in `rememberSaveable`, not in a ViewModel with `SavedStateHandle` as the plan said. That survives rotation and process death without the lifecycle-viewmodel dependency.
+
+**Event detail** (`EventDetailScreen.kt`):
+- **Overview:** sequence, kind, time, time since session start, screen, source, session.
+- **Parameters:** each with a type badge (text, integer, decimal, boolean, map, list, or the class of an unknown value) and a "redacted" badge. TrackLens keeps only the redacted value, so the badge recognizes the configured replacement text or `sha256:` hash.
+- **Issues:** sorted worst first, each with severity, code, parameter and message.
+- **JSON:** highlighted, selectable, with **Copy JSON**. `EventJson` is a small hand-written encoder: no serialization dependency, valid JSON for every normalized type, non-finite numbers as strings.
+- **Navigation:** Previous/Next replace the screen rather than push it, so one Back returns to the list. An event that has left the live buffer gets an explanation instead of an empty page.
+- **Not yet:** "Show in timeline" waits for the session dashboard.
+
+**Other:**
+- More hand-drawn icons in `TrackLensIcons`. Back, Previous and Next mirror in right-to-left layouts.
+- Screens draw their own top bars, and the scaffold no longer pads for the status bar.
+- **Time zone:** `EventFormat.time` reads the default time zone on each call. The Live tests pin UTC, so screenshots look the same on every machine and on CI (they first rendered in this machine's IST and would have failed on Linux).
+
+**Tests:**
+- 5 `LiveFilter` tests (JVM): search, each chip, severity "or worse", save and restore.
+- 4 `EventJson`/`EventFormat` tests (JVM): exact JSON of an event, escaping and number edge cases, type and value formatting, redaction recognition.
+- 1 more pipeline test: Clear empties the buffer, but sequence numbers and totals continue.
+- 13 Robolectric Compose tests through the real activity:
+  - the list is newest first;
+  - search narrows the list and can be cleared;
+  - the Kind menu and "Has issues" filter;
+  - "no matches" offers to clear the filters;
+  - pause holds back 2 new events until Resume;
+  - Clear goes through the runtime;
+  - the dropped banner shows and events get marked read;
+  - TalkBack descriptions on issue icons;
+  - detail shows parameters, badges and issues, and Copy JSON puts exactly the encoded JSON on the clipboard;
+  - Previous/Next, then one Back to the list;
+  - a cleared event is explained;
+  - 3 screenshots (`tracklens_live_list_light`, `tracklens_live_filtered_dark`, `tracklens_event_detail_light`).
+- **1 instrumented burst test on the phone** (`LiveBurstDeviceTest`), through the real install and pipeline. 1,000 events logged from a background thread (about 30 ms) all reach the list, newest first and in order. After one warm-up round, 8 real flings are measured with `FrameMetrics` (vivo V2437, debuggable build):
+
+  | Run | Frames | p50 | p90 | Max | Slower than 33 ms |
+  |---|---|---|---|---|---|
+  | Without warm-up, before the row slimming | 728–734 | 11–12 ms | 27–36 ms | 76–91 ms | 6–13% |
+  | With warm-up (final, two runs) | 652 / 784 | 11 / 10 ms | 26 / 22 ms | 55 / 45 ms | 6.7% / 1.0% |
+
+  - **Limits:** the test requires p50 ≤ 17 ms (one 60 Hz frame), p90 ≤ 50 ms and at most 15% of frames over 33 ms. They are set for a debuggable build, because that's the only kind TrackLens runs in. They still catch a real regression (the broken measurement below produced 191 ms median frames).
+  - **Warm-up:** a debuggable app runs without ahead-of-time compiled code, so the first flings after a fresh install also measure the JIT warming up. Real users scroll more than once, so the test does one unmeasured round first.
+  - **Row slimming:** rows draw their divider instead of composing one, and the kind label uses a background instead of a `Surface`.
+  - **Arrival time:** the time until the newest row is on screen (0.4–1.2 s across runs) is inflated by the measurement itself, because every UiAutomation poll walks the whole accessibility tree. The MVP's "within 200 ms" check belongs to the sample app (Task 21+) and needs a lighter probe.
+
+**Code organization:** detekt's function-count and complexity limits split the Live screen into `LiveScreen.kt`, `FilterChips.kt` and `EventRow.kt`. `Banner` and `EmptyState` moved to `ui.design/Messages.kt` for the screens to come.
+
+**Lint:** "keeps the newest N events" became a plural (`PluralsCandidate`, an error under warningsAsErrors).
+
+**Device findings (test harness, not TrackLens):**
+- **Compose test rules distort frame timing.** While a Compose test rule is active, Compose runs frames and animations on the test's clock. `performTouchInput` delivered each swipe in one main-thread task (p50 191 ms frames), and real touch input then didn't move the list at all. The burst test therefore uses no Compose rule: it injects real touch events about every 8 ms and finds rows through UiAutomation.
+- **Compose's accessibility provider doesn't implement `findAccessibilityNodeInfosByText`,** so the test walks the node tree itself.
+
 ## Environment quirks (local machine)
 
 - **Expected warning:** Gradle on JDK 25 prints `sun.misc.Unsafe` warnings from its bundled protobuf. They are harmless.

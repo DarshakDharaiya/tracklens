@@ -24,7 +24,7 @@ internal class TrackLensActivity :
         val runtime = UiRuntime.current
         setContent {
             TrackLensTheme(runtime?.config?.theme ?: ThemeConfig.DEFAULT) {
-                TrackLensApp(installed = runtime != null)
+                TrackLensApp(runtime)
             }
         }
     }

@@ -25,6 +25,8 @@ internal class RuntimeImpl(
 
     override fun markAllRead() = pipeline.markAllRead()
 
+    override fun clearLive() = pipeline.clearLive()
+
     override fun openPanel(context: Context) = TrackLensImpl.openPanel(context)
 
     override fun reportFailure(
