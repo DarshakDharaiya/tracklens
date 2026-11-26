@@ -7,7 +7,7 @@ Findings from the Task 2 toolchain spike, updated in Tasks 3 and 4 (2026-11-25).
 | Component | Version | Verified by |
 |---|---|---|
 | Gradle | 9.9.2 (daemon on Temurin JDK 25, provisioned by the daemon toolchain) | All builds below |
-| Android Gradle Plugin | 9.5.2, **built-in Kotlin** (no `org.jetbrains.kotlin.android` plugin) | All builds below |
+| Android Gradle Plugin | 9.5.3, **built-in Kotlin** (no `org.jetbrains.kotlin.android` plugin) | All builds below |
 | Kotlin | 2.4.21 | All builds below |
 | compileSdk / targetSdk | 37 / 37 | 37.0 is the highest floor of the runtime deps (Task 4 AAR metadata scan) |
 | Compose BOM | 2026.09.00 (Compose 1.12.1, Material3 1.4.0) | Composable compiled in `tracklens-ui` at Kotlin language version 2.2 (Task 4) |

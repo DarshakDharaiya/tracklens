@@ -15,7 +15,7 @@ kotlinConsumerLanguage = "2.2"          # languageVersion + apiVersion of librar
 kotlinConsumerStdlib = "2.2.0"          # kotlin-stdlib version declared by library modules
 
 # --- Build tooling: latest stable --------------------------------------------------
-agp = "9.5.2"
+agp = "9.5.3"
 kotlin = "2.4.21"
 ksp = "2.3.14"
 spotless = "8.12.0"
