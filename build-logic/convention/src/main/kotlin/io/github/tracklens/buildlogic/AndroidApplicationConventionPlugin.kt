@@ -23,9 +23,11 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
                 }
 
                 buildTypes.getByName("release") {
+                    // Full-scope R8, as a host app's release build runs it. The project template limited R8 to
+                    // androidx/kotlin/kotlinx (`packageScope`); that partial mode moved a subclass away from its
+                    // package-private kotlin.collections superclass and the release sample crashed at startup.
                     optimization {
                         enable = true
-                        packageScope.set(setOf("androidx.**", "kotlin.**", "kotlinx.**"))
                     }
                 }
             }

@@ -58,7 +58,7 @@ Apply `org.jetbrains.kotlin.plugin.compose` and set `buildFeatures { compose = t
 | Plugin id | What it sets |
 |---|---|
 | `tracklens.android.library` | `com.android.library`, the shared Android settings below, Kotlin explicit API mode, `junit` + `androidx.test.ext:junit` test dependencies |
-| `tracklens.android.application` | `com.android.application`, the shared settings, targetSdk, version 1 / "1.0", test runner, R8 `optimization` for release |
+| `tracklens.android.application` | `com.android.application`, the shared settings, targetSdk, version 1 / "1.0", test runner, full-scope R8 `optimization` for release (Task 21 removed the template's `packageScope`) |
 | `tracklens.android.compose` | Compose compiler, `buildFeatures.compose`, Compose BOM, ui, material3, tooling-preview, activity-compose, debug tooling, UI test deps |
 | `tracklens.room` | KSP, the Room Gradle plugin, `schemaDirectory("<module>/schemas")`, room-runtime + room-compiler |
 | `tracklens.android.benchmark` | `tracklens.android.library` + `androidx.benchmark`, benchmark runner, `testBuildType = "release"`, benchmark-junit4 |
@@ -440,6 +440,58 @@ Targets: normalization ≤ 5 µs (Task 12) and `log()` p50 < 10 µs / p99 < 100 
 **Device findings (test harness, not TrackLens):**
 - **Compose test rules distort frame timing.** While a Compose test rule is active, Compose runs frames and animations on the test's clock. `performTouchInput` delivered each swipe in one main-thread task (p50 191 ms frames), and real touch input then didn't move the list at all. The burst test therefore uses no Compose rule: it injects real touch events about every 8 ms and finds rows through UiAutomation.
 - **Compose's accessibility provider doesn't implement `findAccessibilityNodeInfosByText`,** so the test walks the node tree itself.
+
+## Sample app v1 (Task 21)
+
+**Setup** (`:sample`):
+- `debugImplementation(:tracklens)` and `releaseImplementation(:tracklens-noop)`.
+- `SampleApplication` installs TrackLens with one line in `onCreate`. The same code compiles against both artifacts.
+- The release build is signed with the debug key, so the R8 build can be installed and checked on a device. The sample is never published.
+
+**Fake SDKs** (`sample/.../sdk/`):
+- **`FakeFirebaseAnalytics`:** `logEvent(name, Bundle)`, user properties and a user id.
+- **`FakeAmplitude`:** `track(eventType, properties)`, `identify` and a user id.
+- Both write to logcat (tags `FakeFirebase`, `FakeAmplitude`) and to `SdkCallLog`, which the sample shows on screen. That way a release build visibly still logs even on phones that hide logcat output from non-debuggable apps.
+- **Integration:** each SDK sits behind an `AnalyticsDelegate` (`FirebaseDelegate`, `AmplitudeDelegate`) wrapped with `TrackLens.wrap("firebase" / "amplitude", …)`, the pattern the README will show. Debug builds record every call tagged with its SDK and then forward it. The no-op's `wrap` returns the delegate itself.
+
+**Demo flows** (`DemoFlows`), each a button and runnable by intent (`adb shell am start -n io.github.tracklens.sample/.MainActivity --es flow <id>`):
+
+| Id | What it logs |
+|---|---|
+| `browse` | Home and Product screens, `view_item_list` and `view_item` with item lists |
+| `add_to_cart` | `add_to_cart` |
+| `checkout` | Cart, Checkout and Confirmation screens; `begin_checkout`, `add_shipping_info`, `add_payment_info`, `purchase` |
+| `sign_in` | `login`, plus user id and `plan` property for both SDKs |
+| `sign_out` | `logout`, user ids cleared |
+| `play_song` | Amplitude's "Song Played" |
+| `sensitive` | e-mail, phone, card number in text, password, for redaction |
+| `invalid` | reserved prefix, a name that's too long, a hyphen, 30 parameters (validation arrives in Task 38) |
+| `burst` | 1,000 events from a background thread |
+
+The screen also has Open panel, Show bubble and Hide bubble (debug only), and the SDK calls list.
+
+**Device finding: the R8 release sample crashed at startup**, with `IllegalAccessError: Class kotlin.collections.h extended by class ec is inaccessible`, inside `androidx.startup`, before any app code ran.
+- **Cause:** the project template's `optimization { packageScope = androidx.**, kotlin.**, kotlinx.** }`. That partial-scope R8 mode moved a subclass out of the package of its package-private kotlin.collections superclass.
+- **Not the AGP bump:** AGP 9.5.2 crashes the same way.
+- **Why it went unnoticed:** CI only *builds* the release sample, and it had never been launched.
+- **Fix:** the application convention now runs full-scope R8, as a host's release build does. Task 47's release check should also *launch* the release sample, not only inspect it.
+
+**Verified on the phone (vivo V2437, Android 16):**
+- **Release (R8, tracklens-noop):**
+  - It starts and shows "Release build: no TrackLens", with no bubble in the window (UI Automator dump).
+  - The checkout flow reached the fake SDK: 4 calls on screen and 4 `FakeFirebase` lines in logcat.
+  - Of 1,862 classes in the dex, the only `io.github.tracklens` ones are the sample's `MainActivity` and `SampleApplication`: R8 removed the whole no-op.
+  - The manifest has no TrackLens components.
+- **Debug:** the bubble shows "TrackLens, 7 unread events" after checkout (4 events, 3 screens), and the "TrackLens" launcher shortcut is published.
+- **6 instrumented tests** (`SampleFlowsTest`, debug):
+  - checkout reaches TrackLens (tagged `firebase`, with screens) and the SDK in the same order, with items as bundles;
+  - Amplitude events are tagged `amplitude`;
+  - sign-in records user ids and properties for both SDKs;
+  - redaction masks e-mail, card and password in what TrackLens keeps while the SDK receives the real values;
+  - a 1,000-event burst arrives complete and in order;
+  - the debug build reports TrackLens installed.
+
+**Version:** the library still reports `0.1.0-SNAPSHOT` (`LIBRARY_VERSION`); Task 50 generates it from the published version. The `v0.1.0-alpha01` git tag marks the MVP snapshot; nothing is published yet.
 
 ## Environment quirks (local machine)
 
