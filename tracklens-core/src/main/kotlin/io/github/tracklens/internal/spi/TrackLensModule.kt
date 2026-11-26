@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import io.github.tracklens.InternalTrackLensApi
 import io.github.tracklens.TrackLensConfig
+import io.github.tracklens.TrackedEvent
 import io.github.tracklens.internal.LiveSnapshot
 import kotlinx.coroutines.flow.StateFlow
 
@@ -52,9 +53,37 @@ public interface TrackLensRuntime {
     /** Opens the TrackLens panel, as `TrackLens.openPanel` does. */
     public fun openPanel(context: Context)
 
+    /**
+     * Registers [observer] for every recorded event, after redaction. It runs on the pipeline thread, in recording
+     * order, so it must only hand the event off (the storage writer buffers it).
+     */
+    public fun addRecordObserver(observer: RecordObserver)
+
+    /**
+     * Blocks until every call logged before this one has been recorded and passed to the observers, or
+     * [timeoutMillis] passes. Returns whether it finished. For the crash flush, so the last events are stored too.
+     */
+    public fun awaitPipelineIdle(timeoutMillis: Long): Boolean
+
+    /** Records a storage problem in diagnostics: an error with [failure], otherwise a warning. Never throws. */
+    public fun reportStorageProblem(
+        message: String,
+        failure: Throwable?,
+    )
+
     /** Records a failure of a module in TrackLens' diagnostics; never throws. */
     public fun reportFailure(
         message: String,
         failure: Throwable,
+    )
+}
+
+/** Receives every recorded event on the pipeline thread (see [TrackLensRuntime.addRecordObserver]). */
+@InternalTrackLensApi
+public fun interface RecordObserver {
+    /** [event] was recorded; [redactedKeys] are the top-level parameters redaction changed. */
+    public fun onRecord(
+        event: TrackedEvent,
+        redactedKeys: Set<String>,
     )
 }

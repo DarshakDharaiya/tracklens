@@ -193,6 +193,7 @@ class OverlayAttacherTest {
     fun serviceLoaderFindsTheUiModule() {
         val modules = ServiceLoader.load(TrackLensModule::class.java, TrackLensModule::class.java.classLoader).toList()
 
-        assertTrue(modules.single() is UiModule)
+        // tracklens-ui depends on tracklens-storage, so its StorageModule is found too.
+        assertEquals(1, modules.count { it is UiModule })
     }
 }

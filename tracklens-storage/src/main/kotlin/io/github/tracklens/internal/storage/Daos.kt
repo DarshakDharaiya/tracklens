@@ -55,6 +55,10 @@ public interface SessionDao {
         dropped: Long,
     )
 
+    /** Marks a session as having reached `maxEventsPerSession`. */
+    @Query("UPDATE sessions SET truncated = 1 WHERE id = :id")
+    public suspend fun markTruncated(id: Long)
+
     /** Pins or unpins (pinned sessions are exempt from retention). */
     @Query("UPDATE sessions SET pinned = :pinned WHERE id = :id")
     public suspend fun setPinned(

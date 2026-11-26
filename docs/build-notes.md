@@ -540,6 +540,59 @@ The screen also has Open panel, Show bubble and Hide bubble (debug only), and th
   - Further tests cover: counter and lifecycle updates; deleting a session cascades to everything in it and nothing else; deleting a visit keeps its events without a visit; dashboard Flows follow new writes; diagnostics trimming.
 - **`DatabaseFileTest`** (1): the file is in `noBackupFilesDir`, `auto_vacuum` is INCREMENTAL on the primary connection and in the file itself (checked through a separate plain connection), `foreign_keys` is on, and `user_version` is 1.
 
+## Batched writer (Task 23)
+
+**How events reach storage:**
+- Core still never depends on storage. tracklens-storage registers `StorageModule` (ServiceLoader, kept by its consumer R8 rule), which adds a `RecordObserver` through the runtime.
+- The pipeline calls observers synchronously on its own thread, in recording order, after redaction, with the keys redaction changed. A failing observer is reported and never stops recording.
+- The runtime also gained `awaitPipelineIdle` (for the crash flush) and `reportStorageProblem`.
+
+**`BatchedWriter`** (plan section 4.4):
+- **Buffering:** `enqueue` on the pipeline thread only buffers. Writes happen on one "TrackLens-Writer" thread, one Room transaction per batch, so a batch is stored completely or not at all. The database opens lazily on that thread.
+- **Flush triggers:**
+  - 64 buffered records (immediately);
+  - 200 ms after the first unflushed record;
+  - `ProcessLifecycleOwner` ON_STOP;
+  - `onTrimMemory` at `TRIM_MEMORY_UI_HIDDEN` or higher;
+  - session end (Task 25);
+  - the crash handler.
+- **Why 200 ms, not 250:** the plan says 250 ms *and* that a sudden death loses at most 250 ms. A record that arrives while a batch is being written also waits for that write, so a 250 ms timer can't keep that promise. The 50 ms margin covers the write.
+- **Crash flush:** `CrashFlushHandler` is installed in front of the existing default handler. Within an 800 ms budget it drains the pipeline (so the events logged just before the crash are included), flushes the writer, then always passes the same thread and exception to the previous handler. A crash on the pipeline or writer thread skips the step that would wait for itself.
+- **Backpressure:** more than 5,000 buffered records and the oldest are dropped from storage only (the live view keeps them). They're counted in `sessions.dropped_count`, with an `SE_EVENTS_DROPPED` session warning.
+- **Truncation:** at `RetentionConfig.maxEventsPerSession`, a session stores nothing more, `truncated = 1`, and it gets one `SE_SESSION_TRUNCATED` warning.
+- **Storage breaker:** a failed batch is put back and retried. After 5 consecutive failures storage turns itself off and reports it; the live view keeps working.
+- **Rows:** `RecordMapper` turns a record into its rows:
+  - `params_json` is written with core's `JsonEncoder`, so it matches Copy JSON;
+  - each top-level parameter gets a typed `event_params` row (STRING, LONG, DOUBLE, BOOLEAN, NULL, ARRAY, BUNDLE, OTHER) with a text and numeric form and the `redacted` flag;
+  - the event's issues become warnings, and `max_severity` and the session counters are updated in the same transaction.
+- **Sessions:** a session row is created lazily from the first record of a pipeline session. Task 25 replaces this with explicit starts, ends, interrupted recovery and device metadata.
+
+**Shared JSON:** the Task 20 encoder moved from tracklens-ui to core (`JsonEncoder`, compact or indented). The UI's `EventJson` now uses it; its exact-output tests pass unchanged.
+
+**Bug caught by the tests:** at first, a full batch of 64 waited for the timer. Both triggers shared one "flush posted" flag, so a waiting timer suppressed the immediate write. They're now separate flags.
+
+**Tests:**
+- 2 core `RecordObserverTest` tests: every record arrives in order with the redacted keys (e-mail, a phone number as a user property), and a failing observer doesn't stop the others.
+- 11 instrumented `BatchedWriterTest` tests (in-memory Room, a test-driven writer thread):
+  - one timer for many records;
+  - a full batch is written immediately;
+  - `flush()` doesn't wait;
+  - **a batch with a duplicate sequence number stores nothing of that batch** and is put back;
+  - 5 failures turn storage off;
+  - backpressure keeps the newest 100 of 110 and records 10 dropped;
+  - truncation at 10, warned once, with other sessions unaffected;
+  - every value type, the redacted flag, warnings and counters;
+  - the crash handler flushes and then calls the previous handler with the same thread and exception;
+  - the crash handler gives up after its budget when the writer is stuck;
+  - background and trim-memory signals (not `TRIM_MEMORY_RUNNING_LOW`, when the UI is still visible).
+- **Process death on the phone:** `sample/qa/measure_kill_loss.py` runs the sample's new `ticker` flow (a numbered event every 10 ms, also written to logcat), kills the process with `kill -9`, copies the database out (WAL included) and compares the newest tick in logcat with the newest stored, using device timestamps. This is the worst case: no ON_STOP, no crash handler.
+
+  | Runs | Lost (min) | Lost (median) | Lost (max) |
+  |---|---|---|---|
+  | 10 | 53 ms | 171 ms | **217 ms** |
+
+  At most 250 ms, as required.
+
 ## Environment quirks (local machine)
 
 - **Expected warning:** Gradle on JDK 25 prints `sun.misc.Unsafe` warnings from its bundled protobuf. They are harmless.

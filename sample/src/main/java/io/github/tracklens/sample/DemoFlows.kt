@@ -7,6 +7,7 @@ import io.github.tracklens.sample.sdk.SampleAnalytics
  * TrackLens has realistic traffic to show: screens, e-commerce events with items, sign-in, an Amplitude event,
  * sensitive values (for redaction) and events that break Firebase rules (for validation, Task 38+).
  */
+@Suppress("TooManyFunctions") // One function per demo flow, plus the dispatcher.
 class DemoFlows(
     private val analytics: SampleAnalytics,
 ) {
@@ -24,6 +25,7 @@ class DemoFlows(
         SENSITIVE("sensitive", "Send sensitive data"),
         INVALID("invalid", "Send invalid events"),
         BURST("burst", "Fire 1,000 events"),
+        TICKER("ticker", "Tick every 10 ms (QA)"),
         ;
 
         companion object {
@@ -42,6 +44,7 @@ class DemoFlows(
             Flow.SENSITIVE -> sensitive()
             Flow.INVALID -> invalid()
             Flow.BURST -> burst()
+            Flow.TICKER -> ticker()
         }
 
     fun browse() {
@@ -114,7 +117,24 @@ class DemoFlows(
         repeat(count) { analytics.firebase.logEvent("burst_event", mapOf("index" to it.toLong())) }
     }
 
+    /**
+     * Logs `tick` with an increasing index every 10 ms until the process dies, and writes each index to logcat
+     * (tag `TrackLensTicker`). Logcat survives a kill, so comparing its last index with the last stored one measures
+     * how much a sudden process death loses (Task 23). Run it off the main thread.
+     */
+    fun ticker() {
+        var index = 0L
+        while (!Thread.currentThread().isInterrupted) {
+            analytics.firebase.logEvent("tick", mapOf("index" to index))
+            android.util.Log.i(TICKER_TAG, "tick $index")
+            index++
+            Thread.sleep(TICK_MILLIS)
+        }
+    }
+
     private companion object {
+        const val TICKER_TAG = "TrackLensTicker"
+        const val TICK_MILLIS = 10L
         val SHOES = mapOf("item_id" to "SKU-SHOES", "item_name" to "Running shoes", "price" to 89.95, "quantity" to 1L)
         val SOCKS = mapOf("item_id" to "SKU-SOCKS", "item_name" to "Sport socks", "price" to 9.95, "quantity" to 2L)
         const val SHOES_PRICE = 89.95

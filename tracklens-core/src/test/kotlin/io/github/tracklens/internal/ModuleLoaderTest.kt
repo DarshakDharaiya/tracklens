@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import io.github.tracklens.InternalTrackLensApi
 import io.github.tracklens.TrackLensConfig
+import io.github.tracklens.internal.spi.RecordObserver
 import io.github.tracklens.internal.spi.TrackLensModule
 import io.github.tracklens.internal.spi.TrackLensRuntime
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,6 +80,15 @@ class ModuleLoaderTest {
         override fun markAllRead() = Unit
 
         override fun clearLive() = Unit
+
+        override fun addRecordObserver(observer: RecordObserver) = Unit
+
+        override fun awaitPipelineIdle(timeoutMillis: Long): Boolean = true
+
+        override fun reportStorageProblem(
+            message: String,
+            failure: Throwable?,
+        ) = Unit
 
         override fun openPanel(context: Context) = Unit
 

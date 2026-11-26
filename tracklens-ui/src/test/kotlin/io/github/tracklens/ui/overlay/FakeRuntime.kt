@@ -3,6 +3,7 @@ package io.github.tracklens.ui.overlay
 import android.content.Context
 import io.github.tracklens.TrackLensConfig
 import io.github.tracklens.internal.LiveSnapshot
+import io.github.tracklens.internal.spi.RecordObserver
 import io.github.tracklens.internal.spi.TrackLensRuntime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,6 +36,15 @@ class FakeRuntime(
         calls += "clearLive"
         snapshots.value = snapshots.value.let { LiveSnapshot(emptyList(), it.totalEvents, it.droppedEvents, 0, it.version + 1) }
     }
+
+    override fun addRecordObserver(observer: RecordObserver) = Unit
+
+    override fun awaitPipelineIdle(timeoutMillis: Long): Boolean = true
+
+    override fun reportStorageProblem(
+        message: String,
+        failure: Throwable?,
+    ) = Unit
 
     override fun openPanel(context: Context) {
         calls += "openPanel"

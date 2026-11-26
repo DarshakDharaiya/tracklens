@@ -57,8 +57,8 @@ class MainActivity : ComponentActivity() {
 
     private fun run(flow: Flow) {
         Log.i(TAG, "Running flow ${flow.id}")
-        // The burst runs in the background, as real bursts do; the rest on the main thread, like click handlers.
-        if (flow == Flow.BURST) background.execute { flows.run(flow) } else flows.run(flow)
+        // The burst and the ticker run in the background, as real bursts do; the rest on the main thread, like clicks.
+        if (flow == Flow.BURST || flow == Flow.TICKER) background.execute { flows.run(flow) } else flows.run(flow)
     }
 
     companion object {

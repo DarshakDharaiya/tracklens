@@ -3,6 +3,7 @@ package io.github.tracklens.internal
 import android.app.Application
 import android.content.Context
 import io.github.tracklens.TrackLensConfig
+import io.github.tracklens.internal.spi.RecordObserver
 import io.github.tracklens.internal.spi.TrackLensModule
 import io.github.tracklens.internal.spi.TrackLensRuntime
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +29,21 @@ internal class RuntimeImpl(
     override fun clearLive() = pipeline.clearLive()
 
     override fun openPanel(context: Context) = TrackLensImpl.openPanel(context)
+
+    override fun addRecordObserver(observer: RecordObserver) = pipeline.addRecordObserver(observer)
+
+    override fun awaitPipelineIdle(timeoutMillis: Long): Boolean = pipeline.awaitIdle(timeoutMillis)
+
+    override fun reportStorageProblem(
+        message: String,
+        failure: Throwable?,
+    ) {
+        if (failure != null) {
+            handleInternalFailure(Component.STORAGE, message, failure)
+        } else {
+            Diagnostics.report(Component.STORAGE, DiagnosticLevel.WARNING, message)
+        }
+    }
 
     override fun reportFailure(
         message: String,

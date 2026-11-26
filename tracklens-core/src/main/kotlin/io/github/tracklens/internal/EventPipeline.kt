@@ -3,6 +3,7 @@ package io.github.tracklens.internal
 import android.os.Process
 import io.github.tracklens.EventKind
 import io.github.tracklens.TrackedEvent
+import io.github.tracklens.internal.spi.RecordObserver
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -30,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong
  * Pipeline thread (one consumer, in queue order): session and sequence number, current screen, ring buffer,
  * listeners, and a [LiveSnapshot] published at most every [PUBLISH_INTERVAL_MILLIS].
  *
- * Redaction runs here (Task 14); validation (Task 38) and storage (Task 23) join the consumer later. Until sessions arrive
+ * Redaction runs here (Task 14) and storage observes every record (Task 23); validation (Task 38) joins later. Until sessions arrive
  * (Task 25) the pipeline runs one implicit session from its creation.
  */
 @Suppress("TooManyFunctions") // EventSink methods plus start/close/awaitIdle and one function per processing step.
@@ -68,6 +70,7 @@ internal class EventPipeline(
     private val sessionStartNanos = clock.elapsedNanos()
 
     private val liveState = MutableStateFlow(LiveSnapshot.EMPTY)
+    private val recordObservers = CopyOnWriteArrayList<RecordObserver>()
 
     /** Latest published state for the live view; replaced at most every [PUBLISH_INTERVAL_MILLIS]. */
     val snapshot: StateFlow<LiveSnapshot> = liveState.asStateFlow()
@@ -135,6 +138,11 @@ internal class EventPipeline(
         queue.trySend(PipelineMessage.MarkAllRead)
     }
 
+    /** Called on this pipeline's thread for every recorded event, in order (storage, Task 23). */
+    fun addRecordObserver(observer: RecordObserver) {
+        recordObservers += observer
+    }
+
     /** Empties the live buffer and the unread count, in queue order with the calls around it. */
     fun clearLive() {
         queue.trySend(PipelineMessage.ClearLive)
@@ -183,7 +191,7 @@ internal class EventPipeline(
     private fun record(call: PipelineMessage.Call) {
         if (call.kind == EventKind.SCREEN) currentScreen = call.name
         // Task 38: validation checks the raw values here, before redaction replaces them.
-        val params = redact(call)
+        val (params, redactedKeys) = redact(call)
         val event =
             TrackedEvent(
                 sequence = ++sequence,
@@ -201,16 +209,47 @@ internal class EventPipeline(
         totalEvents++
         unread++
         listeners.dispatch(event)
+        notifyObservers(event, redactedKeys)
         markDirty()
     }
 
-    /** Redaction by kind; the raw values never leave this function. */
-    private fun redact(call: PipelineMessage.Call): Map<String, Any?> =
+    /** Storage and other modules, synchronously and in order; one failing observer never stops the others. */
+    @Suppress("TooGenericExceptionCaught") // A module must not break recording.
+    private fun notifyObservers(
+        event: TrackedEvent,
+        redactedKeys: Set<String>,
+    ) {
+        for (observer in recordObservers) {
+            try {
+                observer.onRecord(event, redactedKeys)
+            } catch (failure: Throwable) {
+                handleInternalFailure(Component.PIPELINE, "A record observer failed", failure)
+            }
+        }
+    }
+
+    /** Redaction by kind, with the keys it changed; the raw values never leave this function. */
+    private fun redact(call: PipelineMessage.Call): Pair<Map<String, Any?>, Set<String>> =
         when (call.kind) {
-            EventKind.EVENT -> redactor.redactParams(call.params.values).values
-            EventKind.USER_PROPERTY -> mapOf(VALUE_KEY to redactor.redactUserProperty(call.name, call.params.values[VALUE_KEY] as String?))
-            EventKind.USER_ID -> mapOf(USER_ID_NAME to redactor.redactUserId(call.params.values[USER_ID_NAME] as String?))
-            EventKind.SCREEN -> call.params.values
+            EventKind.EVENT -> {
+                redactor.redactParams(call.params.values).let { it.values to it.redactedKeys }
+            }
+
+            EventKind.USER_PROPERTY -> {
+                val raw = call.params.values[VALUE_KEY] as String?
+                val redacted = redactor.redactUserProperty(call.name, raw)
+                mapOf(VALUE_KEY to redacted) to if (redacted != raw) setOf(VALUE_KEY) else emptySet()
+            }
+
+            EventKind.USER_ID -> {
+                val raw = call.params.values[USER_ID_NAME] as String?
+                val redacted = redactor.redactUserId(raw)
+                mapOf(USER_ID_NAME to redacted) to if (redacted != raw) setOf(USER_ID_NAME) else emptySet()
+            }
+
+            EventKind.SCREEN -> {
+                call.params.values to emptySet()
+            }
         }
 
     /** Publishes now unless one went out less than [PUBLISH_INTERVAL_MILLIS] ago; then once that interval ends. */
