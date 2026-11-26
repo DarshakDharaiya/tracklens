@@ -1,0 +1,705 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "c978a39721bcf5b875399e8d923c6f70",
+    "entities": [
+      {
+        "tableName": "sessions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `uuid` TEXT NOT NULL, `label` TEXT, `notes` TEXT, `started_at` INTEGER NOT NULL, `ended_at` INTEGER, `start_elapsed_realtime` INTEGER NOT NULL, `end_reason` TEXT NOT NULL, `is_manual` INTEGER NOT NULL, `pinned` INTEGER NOT NULL, `truncated` INTEGER NOT NULL, `app_version_name` TEXT, `app_version_code` INTEGER, `build_type` TEXT, `app_id` TEXT, `device_manufacturer` TEXT, `device_model` TEXT, `os_release` TEXT, `os_sdk_int` INTEGER, `locale` TEXT, `screen_density` INTEGER, `plan_name` TEXT, `plan_version` TEXT, `plan_hash` TEXT, `event_count` INTEGER NOT NULL, `warning_count` INTEGER NOT NULL, `error_count` INTEGER NOT NULL, `dropped_count` INTEGER NOT NULL, `library_version` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "uuid",
+            "columnName": "uuid",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "label",
+            "columnName": "label",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "startedAt",
+            "columnName": "started_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endedAt",
+            "columnName": "ended_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "startElapsedRealtime",
+            "columnName": "start_elapsed_realtime",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endReason",
+            "columnName": "end_reason",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isManual",
+            "columnName": "is_manual",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pinned",
+            "columnName": "pinned",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "truncated",
+            "columnName": "truncated",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "appVersionName",
+            "columnName": "app_version_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "appVersionCode",
+            "columnName": "app_version_code",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "buildType",
+            "columnName": "build_type",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "appId",
+            "columnName": "app_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "deviceManufacturer",
+            "columnName": "device_manufacturer",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "deviceModel",
+            "columnName": "device_model",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "osRelease",
+            "columnName": "os_release",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "osSdkInt",
+            "columnName": "os_sdk_int",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "locale",
+            "columnName": "locale",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "screenDensity",
+            "columnName": "screen_density",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "planName",
+            "columnName": "plan_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "planVersion",
+            "columnName": "plan_version",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "planHash",
+            "columnName": "plan_hash",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "eventCount",
+            "columnName": "event_count",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "warningCount",
+            "columnName": "warning_count",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "errorCount",
+            "columnName": "error_count",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "droppedCount",
+            "columnName": "dropped_count",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "libraryVersion",
+            "columnName": "library_version",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sessions_uuid",
+            "unique": true,
+            "columnNames": [
+              "uuid"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sessions_uuid` ON `${TABLE_NAME}` (`uuid`)"
+          },
+          {
+            "name": "index_sessions_started_at",
+            "unique": false,
+            "columnNames": [
+              "started_at"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sessions_started_at` ON `${TABLE_NAME}` (`started_at`)"
+          }
+        ]
+      },
+      {
+        "tableName": "events",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `session_id` INTEGER NOT NULL, `seq` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL, `elapsed_ms` INTEGER NOT NULL, `kind` TEXT NOT NULL, `name` TEXT NOT NULL, `source` TEXT, `category` TEXT, `screen_name` TEXT, `screen_visit_id` INTEGER, `params_json` TEXT NOT NULL, `param_count` INTEGER NOT NULL, `max_severity` INTEGER NOT NULL, FOREIGN KEY(`session_id`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`screen_visit_id`) REFERENCES `screen_visits`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionId",
+            "columnName": "session_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "seq",
+            "columnName": "seq",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "elapsedMs",
+            "columnName": "elapsed_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "category",
+            "columnName": "category",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "screenName",
+            "columnName": "screen_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "screenVisitId",
+            "columnName": "screen_visit_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "paramsJson",
+            "columnName": "params_json",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "paramCount",
+            "columnName": "param_count",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "maxSeverity",
+            "columnName": "max_severity",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_events_session_id_seq",
+            "unique": true,
+            "columnNames": [
+              "session_id",
+              "seq"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_events_session_id_seq` ON `${TABLE_NAME}` (`session_id`, `seq`)"
+          },
+          {
+            "name": "index_events_session_id_name",
+            "unique": false,
+            "columnNames": [
+              "session_id",
+              "name"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_events_session_id_name` ON `${TABLE_NAME}` (`session_id`, `name`)"
+          },
+          {
+            "name": "index_events_session_id_elapsed_ms",
+            "unique": false,
+            "columnNames": [
+              "session_id",
+              "elapsed_ms"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_events_session_id_elapsed_ms` ON `${TABLE_NAME}` (`session_id`, `elapsed_ms`)"
+          },
+          {
+            "name": "index_events_session_id_max_severity",
+            "unique": false,
+            "columnNames": [
+              "session_id",
+              "max_severity"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_events_session_id_max_severity` ON `${TABLE_NAME}` (`session_id`, `max_severity`)"
+          },
+          {
+            "name": "index_events_screen_visit_id",
+            "unique": false,
+            "columnNames": [
+              "screen_visit_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_events_screen_visit_id` ON `${TABLE_NAME}` (`screen_visit_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "sessions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "session_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "screen_visits",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "screen_visit_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "event_params",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `event_id` INTEGER NOT NULL, `session_id` INTEGER NOT NULL, `key` TEXT NOT NULL, `value_type` TEXT NOT NULL, `value_text` TEXT, `value_num` REAL, `redacted` INTEGER NOT NULL, FOREIGN KEY(`event_id`) REFERENCES `events`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "eventId",
+            "columnName": "event_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionId",
+            "columnName": "session_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "key",
+            "columnName": "key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "valueType",
+            "columnName": "value_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "valueText",
+            "columnName": "value_text",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "valueNum",
+            "columnName": "value_num",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "redacted",
+            "columnName": "redacted",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_event_params_event_id",
+            "unique": false,
+            "columnNames": [
+              "event_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_event_params_event_id` ON `${TABLE_NAME}` (`event_id`)"
+          },
+          {
+            "name": "index_event_params_session_id_key",
+            "unique": false,
+            "columnNames": [
+              "session_id",
+              "key"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_event_params_session_id_key` ON `${TABLE_NAME}` (`session_id`, `key`)"
+          },
+          {
+            "name": "index_event_params_session_id_key_value_text",
+            "unique": false,
+            "columnNames": [
+              "session_id",
+              "key",
+              "value_text"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_event_params_session_id_key_value_text` ON `${TABLE_NAME}` (`session_id`, `key`, `value_text`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "events",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "event_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "screen_visits",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `session_id` INTEGER NOT NULL, `order_index` INTEGER NOT NULL, `screen_name` TEXT NOT NULL, `screen_class` TEXT, `source` TEXT NOT NULL, `entered_elapsed_ms` INTEGER NOT NULL, `exited_elapsed_ms` INTEGER, `duration_ms` INTEGER, FOREIGN KEY(`session_id`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionId",
+            "columnName": "session_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "orderIndex",
+            "columnName": "order_index",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "screenName",
+            "columnName": "screen_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "screenClass",
+            "columnName": "screen_class",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "enteredElapsedMs",
+            "columnName": "entered_elapsed_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "exitedElapsedMs",
+            "columnName": "exited_elapsed_ms",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "durationMs",
+            "columnName": "duration_ms",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_screen_visits_session_id_order_index",
+            "unique": true,
+            "columnNames": [
+              "session_id",
+              "order_index"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_screen_visits_session_id_order_index` ON `${TABLE_NAME}` (`session_id`, `order_index`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "sessions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "session_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "warnings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `session_id` INTEGER NOT NULL, `event_id` INTEGER, `code` TEXT NOT NULL, `severity` INTEGER NOT NULL, `message` TEXT NOT NULL, `param_key` TEXT, FOREIGN KEY(`session_id`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`event_id`) REFERENCES `events`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionId",
+            "columnName": "session_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "eventId",
+            "columnName": "event_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "code",
+            "columnName": "code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "severity",
+            "columnName": "severity",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "message",
+            "columnName": "message",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "paramKey",
+            "columnName": "param_key",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_warnings_session_id_code",
+            "unique": false,
+            "columnNames": [
+              "session_id",
+              "code"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_warnings_session_id_code` ON `${TABLE_NAME}` (`session_id`, `code`)"
+          },
+          {
+            "name": "index_warnings_event_id",
+            "unique": false,
+            "columnNames": [
+              "event_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_warnings_event_id` ON `${TABLE_NAME}` (`event_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "sessions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "session_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "events",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "event_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "diagnostics",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `component` TEXT NOT NULL, `level` TEXT NOT NULL, `message` TEXT NOT NULL, `stacktrace` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "component",
+            "columnName": "component",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "level",
+            "columnName": "level",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "message",
+            "columnName": "message",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stacktrace",
+            "columnName": "stacktrace",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c978a39721bcf5b875399e8d923c6f70')"
+    ]
+  }
+}

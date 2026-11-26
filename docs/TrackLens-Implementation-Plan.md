@@ -1189,7 +1189,7 @@ Each task is sized for one to three focused days and ends with a reviewable PR.
 
 ### Phase 2: Persistence and sessions
 
-22. **Room schema v1** (§3 entities, indices, `noBackupFilesDir`, incremental vacuum) plus all DAO queries. **Done when:** the schema JSON is committed and the instrumented DAO tests assert the fixture numbers for every widget query.
+22. **Room schema v1** (§3 entities, indices, `noBackupFilesDir`, incremental vacuum) plus all DAO queries. **Done when:** the schema JSON is committed and the instrumented DAO tests assert the fixture numbers for every widget query. *(Done: 6 tables as planned; 17 instrumented tests on the phone. Found that WAL read connections report a stale auto_vacuum mode; the mode is now read on the primary connection so the one-time VACUUM never repeats.)*
 23. **Batched writer** (thresholds, flush signals, crash handler chaining, backpressure, truncation, storage breaker). **Done when:** tests prove atomic batches and that `am kill` loses at most 250 ms of events.
 24. **Retention job.** **Done when:** tests show that age and count limits apply, pinned and active sessions survive, and vacuum runs past the threshold.
 25. **Session manager state machine** (auto, manual, timeout, interrupted recovery, metadata capture). **Done when:** fake-clock unit tests cover every transition in §4.5 and the metadata fields are populated on a device.

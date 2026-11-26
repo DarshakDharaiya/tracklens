@@ -493,6 +493,53 @@ The screen also has Open panel, Show bubble and Hide bubble (debug only), and th
 
 **Version:** the library still reports `0.1.0-SNAPSHOT` (`LIBRARY_VERSION`); Task 50 generates it from the published version. The `v0.1.0-alpha01` git tag marks the MVP snapshot; nothing is published yet.
 
+## Room schema v1 (Task 22)
+
+**Schema** (`tracklens-storage/.../internal/storage/`, exported to `tracklens-storage/schemas/.../1.json`):
+
+| Table | Columns | Indices | Foreign keys |
+|---|---|---|---|
+| `sessions` | 29 | `uuid` (unique), `started_at` | — |
+| `events` | 14 | `(session_id, seq)` unique, `(session_id, name)`, `(session_id, elapsed_ms)`, `(session_id, max_severity)`, `screen_visit_id` | session CASCADE, visit SET NULL |
+| `event_params` | 8 | `event_id`, `(session_id, key)`, `(session_id, key, value_text)` | event CASCADE |
+| `screen_visits` | 9 | `(session_id, order_index)` unique | session CASCADE |
+| `warnings` | 7 | `(session_id, code)`, `event_id` | session CASCADE, event CASCADE |
+| `diagnostics` | 6 | — | — |
+
+- **Columns:** exactly plan section 3.2. Enums (`EventKind`, `SessionEndReason`, `ParamValueType`, `ScreenVisitSource`) are stored by name. Severities are 0–3 (`SeverityLevel`). The extra `events.screen_visit_id` index is required by Room for the foreign key.
+- **Package:** `io.github.tracklens.internal.storage`, so it stays out of the ABI dump. Types tracklens-ui's dashboards will use are public `@InternalTrackLensApi`.
+
+**DAOs:**
+- **`SessionDao`:** list (active first, then newest), end, counters, pin, label, delete.
+- **`WriteDao`:** batch inserts, plus `insertEvent` with its params and warnings in one transaction, screen visits and diagnostics trimming.
+- **`DashboardDao`** (charts): summary, timeline, events per bucket, top events, name counts, invalid names, screen flow.
+- **`FindingsDao`:** warning groups and rows, funnel events, comparison counts and order.
+- **`EventListDao`:** keyset-paged event list with name/severity filters, event detail, search by parameter.
+- These three DAOs together cover every query in plan section 3.4. They are split by what they serve because one interface had more functions than detekt allows.
+- Dashboard queries are `Flow`s that re-emit on writes. One-shot queries (funnels, comparison, paging) are `suspend`.
+
+**Database:**
+- `TrackLensDatabase.open(context)` creates `noBackupFilesDir/tracklens.db`, so it's never in Auto Backup or device transfer.
+- Before 1.0, a schema change drops the data (`fallbackToDestructiveMigration(dropAllTables = true)`).
+- Foreign keys are turned on, and `auto_vacuum` is set to INCREMENTAL for retention.
+
+**Device finding: reading SQLite settings in WAL mode.**
+- Android's SQLite defaults to `auto_vacuum = FULL`, and Room opens the database in WAL mode with a connection pool. Reads outside a transaction go to a pooled read connection, which kept reporting the old mode (1) after the switch, even though the file already said INCREMENTAL (2).
+- My first `onOpen` checked the mode that way, so on every open it would have seen 1 and run a full `VACUUM`, rewriting the whole database.
+- `TrackLensDatabase.autoVacuumMode` now reads inside a transaction (the primary connection). The VACUUM runs once, on first open, while the database is still empty. `foreign_keys` is per connection too, and matters on the primary connection, where deletes run.
+
+**Tests: 17 instrumented, on the phone (vivo V2437).**
+- **`DashboardFixture`:** three sessions with hand-computed numbers, written up as a table in its KDoc. Session A is active with 14 records across 5 screen visits (one record outside any visit) and 6 warnings, one of them session-level. Session B has 5 events for comparison. Session C is empty.
+- **`DashboardDaoTest`** (16): asserts the fixture numbers for every widget query, for example:
+  - summary 10 events / 7 names / 2 invalid / 4 screens / 6 warnings;
+  - 60-second buckets `(4, 1 warning)` and `(6, 2 warnings)`;
+  - warning groups worst first;
+  - funnel sequence 4, 5, 6, 10, 11, 14;
+  - keyset pages and `LIKE` filters (`add%` matches `add_to_cart` and `add_payment_info`);
+  - search by `item_id`.
+  - Further tests cover: counter and lifecycle updates; deleting a session cascades to everything in it and nothing else; deleting a visit keeps its events without a visit; dashboard Flows follow new writes; diagnostics trimming.
+- **`DatabaseFileTest`** (1): the file is in `noBackupFilesDir`, `auto_vacuum` is INCREMENTAL on the primary connection and in the file itself (checked through a separate plain connection), `foreign_keys` is on, and `user_version` is 1.
+
 ## Environment quirks (local machine)
 
 - **Expected warning:** Gradle on JDK 25 prints `sun.misc.Unsafe` warnings from its bundled protobuf. They are harmless.
